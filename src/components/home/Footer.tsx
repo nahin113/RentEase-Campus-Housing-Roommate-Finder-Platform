@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
+import { FaSquareXTwitter } from "react-icons/fa6";
+import { IoLogoYoutube } from "react-icons/io";
+import { FaFacebookSquare } from "react-icons/fa";
+import { FaSquareInstagram } from "react-icons/fa6";
 export default function Footer() {
   return (
     <footer className="w-full bg-black text-white px-6 md:px-16 py-12 font-sans">
@@ -31,15 +34,18 @@ export default function Footer() {
               Follow us
             </span>
             <div className="flex flex-wrap gap-2">
-              {["Instagram", "Facebook", "Twitter", "Youtube"].map((social) => (
-                <Link
-                  key={social}
-                  href="#"
-                  className="text-xs bg-zinc-800/60 text-gray-300 px-4 py-2 rounded-full border border-zinc-800 hover:bg-zinc-700 hover:text-white transition-colors"
-                >
-                  {social}
-                </Link>
-              ))}
+              <Link href="#">
+                <FaSquareInstagram size={30} />
+              </Link>
+              <Link href="#">
+                <FaFacebookSquare size={30} />
+              </Link>
+              <Link href="#">
+                <FaSquareXTwitter size={30} />
+              </Link>
+              <Link href="#">
+                <IoLogoYoutube size={32} />
+              </Link>
             </div>
           </div>
         </div>
@@ -164,7 +170,7 @@ export default function Footer() {
               href="mailto:info@uncabin.com"
               className="hover:text-white transition-colors"
             >
-              info@uncabin.com
+              info@rentease.com
             </a>
           </div>
           <div>

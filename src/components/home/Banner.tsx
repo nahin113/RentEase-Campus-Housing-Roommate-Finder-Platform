@@ -14,7 +14,6 @@ import { CalendarDays, CircleDollarSign, MapPin } from "lucide-react";
 
 export default function Banner() {
   return (
-    // Height strictly limited to 60-70% of the screen (using 65vh)
     <section className="relative w-full h-[85vh] min-h-137.5 flex flex-col justify-between px-6 md:px-16 pt-32 pb-12 overflow-hidden">
       {/* 1. BACKGROUND IMAGE & OVERLAY */}
       <div className="absolute inset-0 z-0">
