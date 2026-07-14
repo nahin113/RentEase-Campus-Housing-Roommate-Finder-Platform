@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Shield, Users, Compass, Eye, HeartHandshake, CheckCircle2 } from "lucide-react"
+import { Shield, Eye, HeartHandshake, CheckCircle2 } from "lucide-react"
 
 export default function AboutPage() {
   return (

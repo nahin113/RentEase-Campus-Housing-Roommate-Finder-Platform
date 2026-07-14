@@ -12,7 +12,6 @@ import {
   ChevronDown, 
   ChevronLeft, 
   ChevronRight,
-  Sparkles,
   GraduationCap
 } from "lucide-react"
 import { Button } from "@/components/ui/button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid2X2, Mail, Phone, ChevronDown, LogOut, LayoutDashboard, PlusCircle } from "lucide-react";
+import { Mail, Phone, ChevronDown, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -28,7 +28,7 @@ export default function Navbar() {
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
-  const role = user?.accountType;
+  // const role = user?.accountType;
 
   const handleSignOut = async () => {
     await authClient.signOut();

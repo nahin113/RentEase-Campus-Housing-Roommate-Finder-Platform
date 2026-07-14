@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, ChevronDown, BookOpen, AlertCircle, Sparkles } from "lucide-react"
+import { Search, ChevronDown } from "lucide-react"
 
 interface FAQItem {
   q: string
