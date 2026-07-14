@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import { useState } from "react"
 import { Search, ChevronDown, BookOpen, AlertCircle, Sparkles } from "lucide-react"
 
 interface FAQItem {

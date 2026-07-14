@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Navigation, DollarSign, Users, ArrowUpRight, Compass } from 'lucide-react'
+import { Navigation, DollarSign, Users, ArrowUpRight, Compass } from 'lucide-react'
 
 // Mock Data representing Universities & their respective popular neighborhoods
 const UNIVERSITIES_DATA = [

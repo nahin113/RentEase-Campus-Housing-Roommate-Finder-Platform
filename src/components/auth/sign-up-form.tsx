@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent, ChangeEvent, KeyboardEvent } from "react";
+import { useState, FormEvent, ChangeEvent, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, UserCircle, Home, ArrowUpToLine, Plus, X } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
