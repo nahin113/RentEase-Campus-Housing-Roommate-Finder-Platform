@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Navbar() {
   return (
@@ -32,12 +33,14 @@ export default function Navbar() {
 
         {/* 2. NAVIGATION LINKS SECTION */}
         <nav className="hidden md:flex items-center gap-1 bg-white/80 backdrop-blur-md p-1.5 rounded-full border border-gray-100 shadow-sm">
+          <Link href="/flats">
           <Button
             variant="ghost"
             className="rounded-full text-xs font-medium text-gray-700 hover:bg-gray-100 px-4 h-8"
           >
             Browse Flats
           </Button>
+          </Link>
           <Button
             variant="ghost"
             className="rounded-full text-xs font-medium text-gray-700 hover:bg-gray-100 px-4 h-8"
