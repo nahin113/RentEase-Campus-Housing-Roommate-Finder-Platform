@@ -3,6 +3,7 @@ import FeaturedProperties from "@/components/home/FeaturedProperties";
 import FeaturedStudents from "@/components/home/FeaturedStudents";
 import FeatureSection from "@/components/home/FeatureSection";
 import HowItWorks from "@/components/home/HowItWorks";
+import Reviews from "@/components/home/Reviews";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <FeatureSection />
       <FeaturedStudents/>
       <HowItWorks/>
+      <Reviews/>
     </div>
   );
 }
