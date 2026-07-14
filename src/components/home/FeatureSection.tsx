@@ -1,104 +1,172 @@
 "use client"
 
+import { useEffect, useRef, } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
-import { Star } from 'lucide-react'
+import { motion, useInView, animate } from 'framer-motion'
+import { Building2, Users, Handshake, Sparkles } from 'lucide-react'
 
-// Mock data for the feature grid to keep the component clean
-const FEATURES_DATA = [
+// --- CUSTOM HOOK FOR COUNTING ANIMATION ---
+function AnimatedCounter({ from = 0, to, duration = 2.5 }: { from?: number, to: number, duration?: number }) {
+  const nodeRef = useRef<HTMLSpanElement>(null)
+  const inView = useInView(nodeRef, { once: true, margin: "-100px" })
+
+  useEffect(() => {
+    if (inView) {
+      const controls = animate(from, to, {
+        duration: duration,
+        ease: "easeOut",
+        onUpdate(value) {
+          if (nodeRef.current) {
+            // Format with commas
+            nodeRef.current.textContent = Math.round(value).toLocaleString('en-US')
+          }
+        }
+      })
+      return () => controls.stop()
+    }
+  }, [from, to, duration, inView])
+
+  return <span ref={nodeRef}>{from}</span>
+}
+
+// --- MOCK DATA FOR PLATFORM STATS ---
+const STATS_DATA = [
   {
     id: 1,
-    title: "Purpose-Built Study Environments",
-    description: "Dedicated study zones and quiet workspaces are integrated into each residence, creating a...",
+    icon: Building2,
+    value: 3450,
+    suffix: "+",
+    label: "Properties Listed",
+    description: "Verified student apartments, co-living spaces, and private rooms available near campuses."
   },
   {
     id: 2,
-    title: "Verified & Secure Living",
-    description: "Every listing is carefully reviewed and verified to ensure a safe, reliable, and trustworthy livin...",
+    icon: Users,
+    value: 12800,
+    suffix: "+",
+    label: "Active Students",
+    description: "Verified university students actively searching for housing and compatible roommates."
   },
   {
     id: 3,
-    title: "Transparent Pricing",
-    description: "This way, students can manage their budgets with assurance. Transparent rental agreemen...",
-  },
-  {
-    id: 4,
-    title: "Flexible & Student-Centric Options",
-    description: "Choose from private rooms, shared kitchen, or studio units — all strategically located near ca...",
+    icon: Handshake,
+    value: 8420,
+    suffix: "+",
+    label: "Successful Matches",
+    description: "Total number of signed leases and successful roommate pairings facilitated by RentEase."
   }
 ]
 
-export default function FeatureSection() {
+export default function PlatformStatistics() {
   return (
-    <section className="w-full px-6 md:px-16 py-16 bg-white font-sans">
+    <section className="relative w-full px-6 md:px-16 py-20 bg-gray-950 font-sans overflow-hidden">
       
-      {/* 1. TOP IMAGE BANNER */}
-      <div className="relative w-full h-[300px] md:h-[450px] lg:h-[550px] rounded-2xl overflow-hidden mb-16">
-        <Image 
-          src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80" // Replace with your actual image path
-          alt="Modern study environment"
-          fill
-          className="object-cover object-center"
-        />
+      {/* Background Decorative Element */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-full opacity-10 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#f15a14_0%,transparent_70%)]" />
       </div>
 
-      {/* 2. MIDDLE STATS & HEADING ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end mb-20">
+      <div className="relative z-10 max-w-7xl mx-auto">
         
-        {/* Left: Main Heading */}
-        <div className="max-w-md">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-gray-900 leading-[1.1] tracking-tight">
-            Designed to Support <br className="hidden md:block" /> Every Aspect of Student <br className="hidden md:block" /> Living.
-          </h2>
-        </div>
-
-        {/* Right: Massive Number Stat */}
-        <div className="flex flex-col md:items-end text-left md:text-right">
-          <div className="text-6xl sm:text-7xl md:text-8xl lg:text-[100px] font-normal text-gray-900 tracking-tighter leading-none mb-2">
-            2,345,678
-          </div>
-          <div className="text-[10px] md:text-xs font-bold text-gray-600 uppercase tracking-wider">
-            12,500+ STUDENTS SUCCESSFULLY HOUSED
-          </div>
-        </div>
-
-      </div>
-
-      {/* 3. BOTTOM FEATURES GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-        {FEATURES_DATA.map((feature) => (
-          <div key={feature.id} className="flex flex-col group">
-            
-            {/* Custom Toggle/Star Icon */}
-            <div className="mb-6">
-              <div className="w-12 h-6 bg-gray-200 rounded-full relative flex items-center shadow-inner">
-                {/* Orange Circle overlapping the right edge slightly */}
-                <div className="absolute -right-2 w-7 h-7 bg-[#f15a14] rounded-full shadow-md flex items-center justify-center">
-                  <Star className="w-3.5 h-3.5 text-white fill-white" />
-                </div>
-              </div>
+        {/* --- TOP HEADER ROW --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end mb-16 lg:mb-24">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[#f15a14] text-[10px] font-bold tracking-wider uppercase border border-white/5">
+              <Sparkles className="w-3 h-3" />
+              Trusted Ecosystem
             </div>
-
-            {/* Feature Text */}
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 tracking-tight">
-              {feature.title}
-            </h4>
-            <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-3">
-              {feature.description}
-            </p>
-
-            {/* Learn More Link */}
-            <Link 
-              href="#" 
-              className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors mt-auto w-fit"
-            >
-              Learn More
-            </Link>
-            
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-white leading-tight tracking-tight">
+              The Numbers Behind <br className="hidden md:block" /> 
+              <span className="text-[#f15a14] font-bold">RentEase.</span>
+            </h2>
           </div>
-        ))}
-      </div>
+          
+          <div className="text-left lg:text-right flex flex-col justify-end h-full">
+            <p className="text-sm text-gray-400 leading-relaxed max-w-md ml-auto">
+              We've built a secure, transparent, and highly efficient network bridging the gap between property owners and university students looking for their perfect home.
+            </p>
+          </div>
+        </div>
 
+        {/* --- STATS GRID & IMAGE ROW --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          
+          {/* Left: Image Showcase (Spans 5 cols) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="lg:col-span-5 relative w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl"
+          >
+            <Image 
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" 
+              alt="Happy students matching on RentEase"
+              fill
+              className="object-cover"
+            />
+            {/* Overlay Gradient for readability if you want to add text over image later */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-6 left-6 right-6">
+              <p className="text-white text-sm font-medium leading-snug">
+                "Finding a place and a roommate was seamless. RentEase changed the way we approach off-campus living."
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Right: The Stats Grid (Spans 7 cols) */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8">
+            {STATS_DATA.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div 
+                  key={stat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.5, delay: index * 0.15, ease: "easeOut" }}
+                  className="flex flex-col bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-sm hover:bg-white/10 transition-colors"
+                >
+                  <div className="w-12 h-12 bg-[#f15a14]/10 rounded-xl flex items-center justify-center mb-6">
+                    <Icon className="w-6 h-6 text-[#f15a14]" />
+                  </div>
+                  
+                  {/* Animated Number */}
+                  <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2 flex items-baseline">
+                    <AnimatedCounter to={stat.value} />
+                    <span className="text-[#f15a14] ml-1">{stat.suffix}</span>
+                  </div>
+                  
+                  <h4 className="text-sm font-bold text-gray-200 mb-2 tracking-wide uppercase">
+                    {stat.label}
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    {stat.description}
+                  </p>
+                </motion.div>
+              )
+            })}
+
+            {/* 4th filler card to balance the 2x2 grid elegantly */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: 0.45, ease: "easeOut" }}
+              className="flex flex-col justify-center items-center text-center bg-gradient-to-br from-[#f15a14] to-[#d6480a] rounded-2xl p-6 md:p-8 shadow-lg shadow-orange-500/20"
+            >
+              <h4 className="text-xl font-bold text-white mb-3 leading-snug">
+                Ready to find your match?
+              </h4>
+              <button className="bg-white text-gray-950 hover:bg-gray-50 text-xs font-bold py-3 px-6 rounded-xl transition-transform active:scale-95 shadow-sm">
+                Join RentEase Today
+              </button>
+            </motion.div>
+
+          </div>
+        </div>
+
+      </div>
     </section>
   )
 }
