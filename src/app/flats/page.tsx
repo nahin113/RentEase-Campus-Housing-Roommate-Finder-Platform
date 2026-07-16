@@ -1,54 +1,62 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import Image from "next/image"
-import Link from "next/link"
 import { 
   Search, 
-  Star, 
-  Heart, 
-  MapPin, 
-  Check, 
   ChevronDown, 
   ChevronLeft, 
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  Users,
+  Check
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PropertyPostCard } from "@/components/shared/PropertyPostCard"
 
-// Updated Types to support the Campus Neighbourhood filtering
+// Cleaned Types: Removed 'title' entirely to support automated status generation
 export interface FlatProperty {
   id: string
-  title: string
   location: string
-  neighborhood: "jatinangor" | "itb-bandung" | "coblong"
+  neighborhood: "Rupnagar Abashik" | "itb-bandung" | "coblong" | "all-city"
   neighborhoodLabel: string
   price: number
   rating: number
   reviews: number
   image: string
-  desc: string
+  desc: string // Acts as the automated/landlord post content
   type: "Private Room" | "Entire Flat" | "Shared Co-Living"
+  targetAudience: "bachelor" | "family" 
+  landlord?: {
+    name: string
+    avatar: string
+    badge?: string
+    timestamp: string
+  }
 }
 
-// Structured Mock Data with explicit neighborhood definitions
+// Structured Mock Data: Fully streamlined without hardcoded titles
 const FLATS_DATA: FlatProperty[] = [
   {
     id: "flat-1",
-    title: "Campus Edge Residences",
-    location: "Jatinangor - 5 min walk to campus",
-    neighborhood: "jatinangor",
-    neighborhoodLabel: "Jatinangor Campus",
+    location: "Rupnagar Abashik - 5 min walk to campus",
+    neighborhood: "Rupnagar Abashik",
+    neighborhoodLabel: "Rupnagar Abashik Campus",
     price: 250,
     rating: 4.6,
     reviews: 73,
     image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop&q=80",
     desc: "A verified student residence featuring modern private study areas and a cozy shared social lounge.",
-    type: "Shared Co-Living"
+    type: "Shared Co-Living",
+    targetAudience: "bachelor",
+    landlord: {
+      name: "Ahmed Karim",
+      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      badge: "Pro Landlord",
+      timestamp: "2 hours ago"
+    }
   },
   {
     id: "flat-2",
-    title: "Urban Nest Student Living",
     location: "Bandung - 8 min transit to Campus Area",
     neighborhood: "itb-bandung",
     neighborhoodLabel: "ITB / Bandung",
@@ -57,24 +65,36 @@ const FLATS_DATA: FlatProperty[] = [
     reviews: 89,
     image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&auto=format&fit=crop&q=80",
     desc: "Experience stress-free co-living with high-speed internet, premium appliances, and weekly cleanings.",
-    type: "Private Room"
+    type: "Private Room",
+    targetAudience: "bachelor",
+    landlord: {
+      name: "Siti Rahma",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      badge: "Verified",
+      timestamp: "5 hours ago"
+    }
   },
   {
     id: "flat-3",
-    title: "Greenfield Co-Living Suites",
-    location: "Near ITB - 6 min walk from main gate",
-    neighborhood: "itb-bandung",
-    neighborhoodLabel: "ITB / Bandung",
-    price: 195,
+    location: "Coblong Residential Suburban Belt",
+    neighborhood: "coblong",
+    neighborhoodLabel: "Coblong / Center",
+    price: 390,
     rating: 4.9,
-    reviews: 152,
+    reviews: 42,
     image: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&auto=format&fit=crop&q=80",
-    desc: "Premium shared layouts designed to support every aspect of your academic journey in an engaging community.",
-    type: "Shared Co-Living"
+    desc: "Spacious 3-bedroom setup perfect for family stays. Pet friendly, peaceful gated community, and nearby municipal schools.",
+    type: "Entire Flat",
+    targetAudience: "family",
+    landlord: {
+      name: "Dian Pratama",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+      badge: "Superhost",
+      timestamp: "1 day ago"
+    }
   },
   {
     id: "flat-4",
-    title: "Skyline Premium Studio",
     location: "Coblong - City Center near bus routes",
     neighborhood: "coblong",
     neighborhoodLabel: "Coblong / Center",
@@ -83,58 +103,65 @@ const FLATS_DATA: FlatProperty[] = [
     reviews: 124,
     image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&auto=format&fit=crop&q=80",
     desc: "High-end private studio unit featuring modular layouts, dedicated desk arrays, and sweeping city views.",
-    type: "Entire Flat"
+    type: "Entire Flat",
+    targetAudience: "bachelor"
+  },
+  {
+    id: "flat-5",
+    location: "Bandung Area Residential Complex",
+    neighborhood: "itb-bandung",
+    neighborhoodLabel: "ITB / Bandung",
+    price: 450,
+    rating: 4.8,
+    reviews: 19,
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80",
+    desc: "Elegant and deeply quiet residential flat optimized for long-term domestic family living.",
+    type: "Entire Flat",
+    targetAudience: "family"
   }
 ]
 
 export default function BrowseFlatsPage() {
-  // --- UI STATES ---
-  const [saved, setSaved] = useState<Record<string, boolean>>({})
-
   // --- FILTER & SORT STATES ---
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [selectedType, setSelectedType] = useState<string>("")
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string>("")
-  const [maxBudget, setMaxBudget] = useState<number>(400)
+  const [selectedTargetAudience, setSelectedTargetAudience] = useState<string>("") 
+  const [maxBudget, setMaxBudget] = useState<number>(500)
   const [sortBy, setSortBy] = useState<string>("recommended")
   
   // --- PAGINATION STATES ---
   const [currentPage, setCurrentPage] = useState<number>(1)
   const totalPages = 3
 
-  const toggleSave = (id: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    setSaved(prev => ({ ...prev, [id]: !prev[id] }))
-  }
-
   // --- CLIENT-SIDE FILTERING & SORTING LOGIC ---
   const filteredFlats = useMemo(() => {
     return FLATS_DATA.filter((flat) => {
+      // Search matches location, description caption, or property type instead of title
       const matchesSearch = searchQuery === "" || 
-        flat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        flat.location.toLowerCase().includes(searchQuery.toLowerCase())
+        flat.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        flat.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        flat.type.toLowerCase().includes(searchQuery.toLowerCase())
       
       const matchesType = selectedType === "" || flat.type === selectedType
-      
       const matchesNeighborhood = selectedNeighborhood === "" || flat.neighborhood === selectedNeighborhood
-      
+      const matchesTargetAudience = selectedTargetAudience === "" || flat.targetAudience === selectedTargetAudience
       const matchesBudget = flat.price <= maxBudget
 
-      return matchesSearch && matchesType && matchesNeighborhood && matchesBudget
+      return matchesSearch && matchesType && matchesNeighborhood && matchesTargetAudience && matchesBudget
     }).sort((a, b) => {
       if (sortBy === "price-low") return a.price - b.price
       if (sortBy === "price-high") return b.price - a.price
-      return 0 // Fallback to original order for "recommended" / "newest" in mock
+      return 0
     })
-  }, [searchQuery, selectedType, selectedNeighborhood, maxBudget, sortBy])
+  }, [searchQuery, selectedType, selectedNeighborhood, selectedTargetAudience, maxBudget, sortBy])
 
-  // --- INTEGRATION INTERFACES (API CAPABLE) ---
   const handleApplyFilters = () => {
-    // TODO: Connect to backend query builder instead of client-side useMemo filters
     console.log("Submitting API Payload:", { 
       searchQuery, 
       selectedType, 
-      selectedNeighborhood, 
+      selectedNeighborhood,
+      selectedTargetAudience, 
       maxBudget, 
       sortBy, 
       currentPage 
@@ -143,7 +170,6 @@ export default function BrowseFlatsPage() {
 
   const handlePageChange = (pageNum: number) => {
     setCurrentPage(pageNum)
-    // TODO: Connect server payload pagination calls here
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -156,7 +182,7 @@ export default function BrowseFlatsPage() {
           Find Your Perfect <br /> Home Away From Home
         </h1>
         <p className="text-gray-500 text-sm max-w-2xl leading-relaxed pt-2">
-          Transparent student-centric listings near premium universities. Filter by budget, lease layout, or campus neighborhood to match with safety verified rentals seamlessly.
+          Transparent rentals near premium centers and universities. Filter by budget, space layout, tenant configuration, or neighborhood parameters to claim your ideal space seamlessly.
         </p>
       </div>
 
@@ -177,26 +203,62 @@ export default function BrowseFlatsPage() {
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="University, city, or district..." 
+                placeholder="Amenities, features, or areas..." 
                 className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#f15a14] focus:border-transparent transition-all placeholder:text-gray-400"
               />
             </div>
           </div>
 
-          {/* NEW: Campus Neighbourhood Filter Section */}
+          {/* Tenant Segment Target Audience Selector */}
+          <div className="border-t border-gray-200/60 pt-6 space-y-3">
+            <div className="flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-[#f15a14]" />
+              <label className="text-[10px] font-black text-gray-950 uppercase tracking-widest block">
+                Tenant Preference
+              </label>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { name: "All Tenants", value: "" },
+                { name: "Bachelor / Student", value: "bachelor" },
+                { name: "Family Friendly", value: "family" }
+              ].map((audience) => {
+                const isActive = selectedTargetAudience === audience.value
+                return (
+                  <button
+                    key={audience.name}
+                    onClick={() => {
+                      setSelectedTargetAudience(audience.value)
+                      setCurrentPage(1)
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                      isActive 
+                        ? "bg-[#f15a14] text-white border-transparent shadow-md shadow-orange-500/10" 
+                        : "bg-white hover:bg-gray-100 text-gray-600 border-gray-200"
+                    }`}
+                  >
+                    <span>{audience.name}</span>
+                    {isActive && <Check className="w-3.5 h-3.5 text-white" />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Campus Neighbourhood Filter Section */}
           <div className="border-t border-gray-200/60 pt-6 space-y-3">
             <div className="flex items-center gap-1.5">
               <GraduationCap className="w-4 h-4 text-[#f15a14]" />
               <label className="text-[10px] font-black text-gray-950 uppercase tracking-widest block">
-                Campus Neighbourhood
+                Campus Neighborhood
               </label>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {[
                 { name: "All Neighborhoods", value: "" },
-                { name: "Jatinangor Area", value: "jatinangor" },
+                { name: "Rupnagar Abashik Area", value: "Rupnagar Abashik" },
                 { name: "ITB / Bandung", value: "itb-bandung" },
-                { name: "Coblong", value: "coblong" }
+                { name: "Coblong Area", value: "coblong" }
               ].map((campus) => {
                 const isActive = selectedNeighborhood === campus.value
                 return (
@@ -242,7 +304,7 @@ export default function BrowseFlatsPage() {
                     }}
                     className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                       isActive 
-                        ? "bg-[#f15a14] text-white border-transparent shadow-md shadow-orange-500/10" 
+                        ? "bg-gray-950 text-white border-transparent shadow-md" 
                         : "bg-white hover:bg-gray-100 text-gray-600 border-gray-200"
                     }`}
                   >
@@ -282,7 +344,7 @@ export default function BrowseFlatsPage() {
             </div>
           </div>
 
-          {/* Apply Filters Trigger (Backend Hook) */}
+          {/* Apply Filters Trigger */}
           <Button 
             onClick={handleApplyFilters}
             className="w-full bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-6 text-xs font-bold shadow-md shadow-orange-500/5 transition-all active:scale-[0.98]"
@@ -297,7 +359,7 @@ export default function BrowseFlatsPage() {
           {/* Sorting & Result Counts Bar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gray-100 pb-5 gap-4">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              {filteredFlats.length} verified listings found
+              {filteredFlats.length} verified updates found
             </span>
             
             {/* Sorting Trigger */}
@@ -321,12 +383,13 @@ export default function BrowseFlatsPage() {
           {/* Empty State */}
           {filteredFlats.length === 0 && (
             <div className="py-20 text-center space-y-3">
-              <p className="text-gray-400 text-sm font-semibold">No flats match your selected filters.</p>
+              <p className="text-gray-400 text-sm font-semibold">No spaces match your active tenant layout filters.</p>
               <Button 
                 onClick={() => {
                   setSelectedNeighborhood("")
                   setSelectedType("")
-                  setMaxBudget(400)
+                  setSelectedTargetAudience("")
+                  setMaxBudget(500)
                   setSearchQuery("")
                 }}
                 variant="outline"
@@ -337,78 +400,10 @@ export default function BrowseFlatsPage() {
             </div>
           )}
 
-          {/* Main Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          {/* Main Social Posting Grid (Cinematic 2-Column Feed Layout) */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {filteredFlats.map((flat) => (
-              <Link 
-                key={flat.id} 
-                href={`/flats/${flat.id}`}
-                className="group flex flex-col gap-3 cursor-pointer"
-              >
-                {/* Image Frame with Save Overlay */}
-                <div className="relative h-60 w-full rounded-3xl overflow-hidden bg-gray-50 border border-gray-100/50">
-                  <Image 
-                    src={flat.image} 
-                    alt={flat.title} 
-                    fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    sizes="(max-w-768px) 100vw, (max-w-1200px) 50vw, 33vw"
-                  />
-                  
-                  {/* Save Button */}
-                  <button 
-                    onClick={(e) => toggleSave(flat.id, e)}
-                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center text-gray-800 hover:text-red-500 hover:scale-105 active:scale-95 transition-all shadow-md z-10"
-                  >
-                    <Heart className={`w-4 h-4 transition-all ${saved[flat.id] ? "fill-current text-red-500 scale-110" : ""}`} />
-                  </button>
-
-                  {/* Accommodation Tag Pill */}
-                  <span className="absolute top-4 left-4 bg-gray-950/85 backdrop-blur-md text-white text-[9px] font-bold py-1 px-2.5 rounded-lg shadow-sm uppercase tracking-wider">
-                    {flat.type}
-                  </span>
-
-                  {/* Bottom Gradient Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-950/85 via-gray-950/30 to-transparent p-4 pt-12">
-                    <p className="text-white text-xs font-semibold flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#f15a14]" />
-                      {flat.location}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Listing Details */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      {flat.neighborhoodLabel}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-extrabold text-gray-900 tracking-tight leading-snug group-hover:text-[#f15a14] transition-colors line-clamp-1">
-                    {flat.title}
-                  </h3>
-
-                  {/* Price & Star Ratings Row */}
-                  <div className="flex items-center justify-between">
-                    <div className="text-gray-950 font-black text-base flex items-baseline gap-0.5">
-                      <span className="text-xs font-normal text-gray-400">$</span>
-                      {flat.price} 
-                      <span className="text-[10px] font-semibold text-gray-400 ml-1">/ mo</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-1 text-xs font-bold text-gray-950">
-                      <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" /> 
-                      <span>{flat.rating}</span> 
-                      <span className="font-medium text-gray-400">({flat.reviews})</span>
-                    </div>
-                  </div>
-
-                  {/* Card Micro description */}
-                  <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
-                    {flat.desc}
-                  </p>
-                </div>
-              </Link>
+              <PropertyPostCard key={flat.id} flat={flat} />
             ))}
           </div>
 
