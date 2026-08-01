@@ -62,7 +62,6 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* Clean Contact Form */}
           <div className="md:col-span-7">
             {submitted ? (
               <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 p-8 rounded-3xl text-center space-y-3">

@@ -16,7 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
-import AuthModal from "@/components/auth/auth-modal"; // Import Modal
+import AuthModal from "@/components/auth/auth-modal"; 
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -28,8 +28,10 @@ export default function Navbar() {
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
-  // const role = user?.accountType;
-
+  let role = user?.accountType;
+  if(role === 'student') {
+    role = 'renter'
+  }
   const handleSignOut = async () => {
     await authClient.signOut();
     setDropdownOpen(false);
@@ -117,7 +119,7 @@ export default function Navbar() {
 
                 {user ? (
                   <>
-                    <Link href="/dashboard">
+                    <Link href={`${role}`}>
                       <DropdownMenuItem className="px-2.5 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2">
                         <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
                       </DropdownMenuItem>
