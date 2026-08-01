@@ -52,7 +52,7 @@ export const auth = betterAuth({
       accountType: {
         type: "string",
         required: false,
-        defaultValue: "student", // Defaults to student/tenant role
+        defaultValue: "renter", // Defaults to student/tenant role
       },
       bio: {
         type: "string",
@@ -76,7 +76,7 @@ export const auth = betterAuth({
           return {
             data: {
               ...user,
-              accountType: user.accountType || "student",
+              accountType: user.accountType || "renter",
               banned: false,
             },
           };
