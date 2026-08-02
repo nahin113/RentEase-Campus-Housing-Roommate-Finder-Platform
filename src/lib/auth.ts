@@ -22,7 +22,7 @@ const db = client.db("rentease_db"); // Updated database name
 interface DbUser {
   _id: ObjectId | string;
   banned?: boolean;
-  accountType?: "student" | "landlord";
+  accountType?: "renter" | "landlord"
   bio?: string;
   skills?: string[]; // Keeps schema structural compatibility for habits
 }

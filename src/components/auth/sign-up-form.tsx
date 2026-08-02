@@ -16,7 +16,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [selectedRole, setSelectedRole] = useState<"student" | "landlord">("student");
+  const [selectedRole, setSelectedRole] = useState<"renter" | "landlord">("renter");
   const [passwordError, setPasswordError] = useState<string>("");
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -86,7 +86,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
         image: logoUrl || undefined,
         accountType: selectedRole,
         bio: (user.bio as string) || undefined,
-        ...(selectedRole === "student" && { habits }),
+        ...(selectedRole === "renter" && { habits }),
       });
 
       if (error) {
@@ -184,15 +184,15 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => setSelectedRole("student")}
+            onClick={() => setSelectedRole("renter")}
             className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
-              selectedRole === "student"
+              selectedRole === "renter"
                 ? "bg-[#4E654C] border-[#4E654C] text-[#F4EFEA]"
                 : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300"
             }`}
           >
             <UserCircle className="w-4 h-4" />
-            <span className="text-xs font-bold">Student Tenant</span>
+            <span className="text-xs font-bold">Renter Tenant</span>
           </button>
           <button
             type="button"
@@ -216,7 +216,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
             name="bio"
             rows={2}
             placeholder={
-              selectedRole === "student"
+              selectedRole === "renter"
                 ? "Introduce your clean rental habits or academic course details..."
                 : "Briefly detail your rental listings and property portfolios..."
             }
@@ -224,7 +224,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
           />
         </div>
 
-        {selectedRole === "student" && (
+        {selectedRole === "renter" && (
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-zinc-400 tracking-wider uppercase block">
               Lifestyle Habits
