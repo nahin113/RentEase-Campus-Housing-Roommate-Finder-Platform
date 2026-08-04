@@ -21,7 +21,7 @@ export default function Footer() {
             </div>
             <p className="text-base md:text-lg font-light leading-relaxed text-zinc-400">
               RentEase simplifies the housing search process while providing
-              transparency, safety, and convenience for both students and
+              transparency, safety, and convenience for both renters and
               property owners.
             </p>
             <Link href="/browse" className="inline-block">
@@ -84,7 +84,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/blog" className="hover:text-white transition-colors">
-                  Student Life Blog
+                  Renter Life Blog
                 </Link>
               </li>
             </ul>
@@ -151,7 +151,7 @@ export default function Footer() {
             <div className="flex items-center bg-zinc-900 rounded-full p-1 border border-zinc-800 max-w-sm w-full">
               <Input
                 type="email"
-                placeholder="Student email address"
+                placeholder="Renter email address"
                 className="bg-transparent border-0 text-white placeholder-zinc-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs h-8 px-3 rounded-full w-full"
               />
               <Button className="bg-[#f15a14] hover:bg-[#d6480a] text-white text-xs font-bold rounded-full h-8 px-5 transition-colors">

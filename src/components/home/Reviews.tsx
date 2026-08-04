@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 
 interface Testimonial {
   id: number
-  category: "Student Match" | "Landlord Partner" | "Roommate Co-Lease"
+  category: "Renter Match" | "Landlord Partner" | "Roommate Co-Lease"
   title: string
   description: string
   smallImage: string
@@ -29,12 +29,12 @@ const REVIEWS_DATA: Testimonial[] = [
     category: "Roommate Co-Lease",
     title: "Matched with my ideal roommate and scored a budget-friendly flat!",
     description: "Finding accommodation was stressing me out until I used RentEase. I matched with Alexander based on our shared 'study-first' habits, merged our target budgets, and secured an amazing flat just 5 minutes from campus. Doing it together saved us thousands!",
-    smallImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&auto=format&fit=crop&q=80", // Students studying together
+    smallImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&auto=format&fit=crop&q=80", // Renters studying together
     largeImage: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1000&auto=format&fit=crop&q=80", // Warm bedroom setting
     rating: 5,
     author: {
       name: "Sarah Jenkins",
-      role: "Sophomore Pre-Med Student",
+      role: "Sophomore Pre-Med Renter",
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
     }
   },
@@ -42,7 +42,7 @@ const REVIEWS_DATA: Testimonial[] = [
     id: 2,
     category: "Landlord Partner",
     title: "100% Occupancy with zero background-check headaches",
-    description: "As a landlord, screening student tenants used to take weeks. RentEase provides verified student profiles, pre-assessed budgets, and incredibly smooth digital lease agreement templates. I filled all my four-bedroom suites in record time with reliable tenants.",
+    description: "As a landlord, screening renter tenants used to take weeks. RentEase provides verified renter profiles, pre-assessed budgets, and incredibly smooth digital lease agreement templates. I filled all my four-bedroom suites in record time with reliable tenants.",
     smallImage: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&auto=format&fit=crop&q=80", // Modern property/key
     largeImage: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1000&auto=format&fit=crop&q=80", // Beautiful apartment interior
     rating: 5,
@@ -54,7 +54,7 @@ const REVIEWS_DATA: Testimonial[] = [
   },
   {
     id: 3,
-    category: "Student Match",
+    category: "Renter Match",
     title: "Transparent, simple, and exactly as advertised",
     description: "Living out of state made searching for housing incredibly risky. The verified property photos and video walkthroughs on RentEase matched reality perfectly. The messaging dashboard allowed me to directly secure the property with the landlord securely.",
     smallImage: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=400&auto=format&fit=crop&q=80", // Well-lit desk space
@@ -114,7 +114,7 @@ export default function Reviews() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-16">
         <div className="lg:col-span-8 space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#f15a14]/10 rounded-full text-[#f15a14] text-[10px] font-bold tracking-wider uppercase">
-            🌟 Loved by Students & Landlords
+            🌟 Loved by Renters & Landlords
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-none uppercase">
             Proven Success <br/> On RentEase
@@ -228,7 +228,7 @@ export default function Reviews() {
             <div className="lg:col-span-7 relative rounded-3xl overflow-hidden shadow-md min-h-[300px] lg:min-h-full">
               <Image 
                 src={currentReview.largeImage}
-                alt="Student apartment premium setup"
+                alt="renter apartment premium setup"
                 fill
                 priority
                 className="object-cover"

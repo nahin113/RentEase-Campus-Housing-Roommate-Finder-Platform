@@ -37,15 +37,15 @@ const STATS_DATA = [
     value: 3450,
     suffix: "+",
     label: "Properties Listed",
-    description: "Verified student apartments, co-living spaces, and private rooms available near campuses."
+    description: "Verified renter apartments, co-living spaces, and private rooms available near campuses."
   },
   {
     id: 2,
     icon: Users,
     value: 12800,
     suffix: "+",
-    label: "Active Students",
-    description: "Verified university students actively searching for housing and compatible roommates."
+    label: "Active Renters",
+    description: "Verified university renters actively searching for housing and compatible roommates."
   },
   {
     id: 3,
@@ -83,7 +83,7 @@ export default function PlatformStatistics() {
           
           <div className="text-left lg:text-right flex flex-col justify-end h-full">
             <p className="text-sm text-gray-400 leading-relaxed max-w-md ml-auto">
-              We've built a secure, transparent, and highly efficient network bridging the gap between property owners and university students looking for their perfect home.
+              We've built a secure, transparent, and highly efficient network bridging the gap between property owners and university renters looking for their perfect home.
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function PlatformStatistics() {
           >
             <Image 
               src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" 
-              alt="Happy students matching on RentEase"
+              alt="Happy renters matching on RentEase"
               fill
               className="object-cover"
             />

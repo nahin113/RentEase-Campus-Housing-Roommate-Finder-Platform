@@ -16,7 +16,7 @@ const STEPS_DATA: Step[] = [
     id: 1,
     icon: Search,
     title: "1. Find Your Pathway",
-    description: "Browse verified local student properties directly, or start by exploring our Student Community if you need a compatible roommate first."
+    description: "Browse verified local renter properties directly, or start by exploring our Renter Community if you need a compatible roommate first."
   },
   {
     id: 2,
@@ -86,7 +86,7 @@ export default function HowItWorks() {
               <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-sm group">
                 <Image 
                   src="https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=600&auto=format&fit=crop&q=80" 
-                  alt="Students studying together" 
+                  alt="Renters studying together" 
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-103"
                 />
@@ -120,12 +120,12 @@ export default function HowItWorks() {
 
           </div>
 
-          {/* RIGHT SIDE: (Spans 4 columns) Contains One Tall Portrait Image of modern student lifestyle */}
+          {/* RIGHT SIDE: (Spans 4 columns) Contains One Tall Portrait Image of modern renter lifestyle */}
           <div className="lg:col-span-4 mt-8 lg:mt-0">
             <div className="relative w-full h-[400px] lg:h-full rounded-2xl overflow-hidden shadow-sm group">
               <Image 
                 src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&auto=format&fit=crop&q=80" 
-                alt="Bright collaborative student house layout" 
+                alt="Bright collaborative renter house layout" 
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-103"
               />

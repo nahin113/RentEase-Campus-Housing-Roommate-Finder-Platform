@@ -24,7 +24,7 @@ interface DbUser {
   banned?: boolean;
   accountType?: "renter" | "landlord"
   bio?: string;
-  skills?: string[]; // Keeps schema structural compatibility for habits
+  habits?: string[]; // Keeps schema structural compatibility for habits
 }
 
 export const auth = betterAuth({
@@ -52,15 +52,15 @@ export const auth = betterAuth({
       accountType: {
         type: "string",
         required: false,
-        defaultValue: "renter", // Defaults to student/tenant role
+        defaultValue: "renter", // Defaults to renter/tenant role
       },
       bio: {
         type: "string",
         required: false,
       },
-      skills: {
+      habits: {
         type: "string[]",
-        required: false, // Maps the student's lifestyle habits
+        required: false, // Maps the renter's lifestyle habits
       },
       banned: {
         type: "boolean",
