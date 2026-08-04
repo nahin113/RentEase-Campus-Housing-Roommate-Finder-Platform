@@ -1,59 +1,58 @@
-"use client"
+"use client";
 
-import { LayoutGrid, BedDouble, Users, CreditCard, LogOut } from "lucide-react"
+import Link from "next/link";
+import { LayoutGrid, LogOut } from "lucide-react";
+import DashboardNavLinks from "./DashboardNavLinks";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  role?: "landlord" | "renter" | "admin";
+}
+
+export function AppSidebar({ role = "renter" }: AppSidebarProps) {
+  const handleLogout = () => {
+    // Add custom logout logic / next-auth signOut here
+    window.location.href = "/api/auth/signout";
+  };
+
   return (
-    <Sidebar className="border-r border-gray-100 bg-white/50 backdrop-blur-xl">
-      {/* Sidebar Header: Matches Navbar Style */}
+    <Sidebar className="border-r border-gray-100 bg-white/70 backdrop-blur-xl">
+      {/* Header Badge */}
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full shadow-lg">
-          <LayoutGrid className="h-4 w-4" />
-          <span className="font-semibold text-xs tracking-tight">RentEase Admin</span>
-        </div>
+        <Link href="/" className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-full shadow-md hover:bg-gray-900 transition-colors">
+          <LayoutGrid className="h-4 w-4 text-[#f15a14]" />
+          <span className="font-bold text-xs tracking-tight">
+            RentEase <span className="capitalize text-gray-400">({role})</span>
+          </span>
+        </Link>
       </SidebarHeader>
 
+      {/* Navigation Links */}
       <SidebarContent className="px-3">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              {[
-                { title: "Dashboard", icon: LayoutGrid },
-                { title: "Browse Flats", icon: BedDouble },
-                { title: "Roommates", icon: Users },
-                { title: "Billing", icon: CreditCard },
-              ].map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    className="rounded-full hover:bg-gray-100/80 transition-all font-medium text-gray-700"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <DashboardNavLinks role={role} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <SidebarMenuButton className="rounded-full text-red-600 hover:bg-red-50 hover:text-red-700">
+      {/* Footer Logout */}
+      <SidebarFooter className="p-4 border-t border-gray-100">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 rounded-full px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-all"
+        >
           <LogOut className="h-4 w-4" />
           <span>Log out</span>
-        </SidebarMenuButton>
+        </button>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
