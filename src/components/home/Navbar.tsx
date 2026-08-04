@@ -16,31 +16,36 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
-import AuthModal from "@/components/auth/auth-modal"; 
+// 👇 পুরোনো AuthModal ইমপোর্ট সরান
+// import AuthModal from "@/components/auth/auth-modal"; 
+
+// 👇 Zustand ইমপোর্ট যোগ করুন
+import { useAuthStore } from "@/lib/auth-store";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   
-  // Modal Controller States
-  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
-  const [authModalView, setAuthModalView] = useState<"signin" | "signup">("signin");
+  // ❌ এই স্টেটগুলি সরান (Zustand ব্যবহার করব)
+  // const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  // const [authModalView, setAuthModalView] = useState<"signin" | "signup">("signin");
+
+  // 👇 Zustand থেকে openAuthModal নিন
+  const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
   let role = user?.accountType;
-  if(role === 'student') {
-    role = 'renter'
-  }
+  
   const handleSignOut = async () => {
     await authClient.signOut();
     setDropdownOpen(false);
   };
 
-  const openAuthModal = (view: "signin" | "signup") => {
-    setAuthModalView(view);
-    setAuthModalOpen(true);
-    setDropdownOpen(false); // Close dropdown if accessed via responsive options
+  // 👇 এই ফাংশনটি আপডেট করুন (Zustand ব্যবহার করবে)
+  const openAuthModalHandler = (view: "signin" | "signup") => {
+    openAuthModal(view); // Zustand-এর openAuthModal কল করব
+    setDropdownOpen(false);
   };
 
   const isActive = (path: string) => pathname === path;
@@ -134,15 +139,15 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    {/* Integrated Dynamic Custom Modal Triggers */}
+                    {/* 👇 onClick আপডেট করুন */}
                     <DropdownMenuItem
-                      onClick={() => openAuthModal("signin")}
+                      onClick={() => openAuthModalHandler("signin")}
                       className="px-2.5 py-1.5 text-xs font-semibold rounded-xl cursor-pointer"
                     >
                       Sign In
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => openAuthModal("signup")}
+                      onClick={() => openAuthModalHandler("signup")}
                       className="px-2.5 py-1.5 text-xs font-semibold text-[#4E654C] bg-[#4E654C]/5 rounded-xl cursor-pointer"
                     >
                       Create Account
@@ -168,12 +173,12 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* 4. AUTH MODAL PORTAL PORT ENTRY */}
-      <AuthModal
+      {/* ❌ এখান থেকে AuthModal সরান (এখন Layout-এ থাকবে) */}
+      {/* <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         initialView={authModalView}
-      />
+      /> */}
     </>
   );
 }

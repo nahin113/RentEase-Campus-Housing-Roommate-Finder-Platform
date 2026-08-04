@@ -5,29 +5,39 @@ import Image from "next/image";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SignInForm } from "./sign-in-form";
 import { SignUpForm } from "./sign-up-form";
+import { useAuthStore } from "@/lib/auth-store";
+import { authClient } from "@/lib/auth-client";
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialView?: "signin" | "signup";
-}
+export default function AuthModal() {
+  const {
+    isAuthModalOpen: isOpen,
+    authModalView: initialView,
+    closeAuthModal: onClose,
+    pendingAction,
+    setPendingAction,
+  } = useAuthStore();
 
-export default function AuthModal({ isOpen, onClose, initialView = "signin" }: AuthModalProps) {
   const [view, setView] = useState<"signin" | "signup">(initialView);
+  const { data: session } = authClient.useSession();
+
+  useEffect(() => {
+    if (session?.user && pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+      onClose();
+    }
+  }, [session, pendingAction, setPendingAction, onClose]);
+
 
   useEffect(() => {
     if (isOpen) setView(initialView);
   }, [isOpen, initialView]);
 
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* 
-        FORCE STRIP RADIX/SHADCN DEFAULT WRAPPERS:
-        We drop custom override tags to destroy the structural border shell entirely.
-      */}
       <DialogContent className="sm:max-w-[960px] w-[95vw] p-0 border-0 bg-transparent shadow-none [box-shadow:none] !border-none focus:outline-none focus:ring-0 [&>button]:hidden">
         
-        {/* INNER WRAPPER CONTAINER: The actual outer visual shell boundary */}
         <div className="w-full flex items-stretch overflow-hidden rounded-[2.5rem] shadow-2xl bg-[#F4EFEA]">
           
           {/* LEFT SIDE: Image Block */}

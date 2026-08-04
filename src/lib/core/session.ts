@@ -21,7 +21,7 @@ export const getUserToken = async () => {
 
 export const requireRole = async (role:string) => {
   const user = await getUserSession();
-  if (!user) redirect("/auth/signin");
+  if (!user) throw new Error("UNAUTHENTICATED");
   if (user?.accountType !== role) redirect("/unauthorized");
   return user;
 };

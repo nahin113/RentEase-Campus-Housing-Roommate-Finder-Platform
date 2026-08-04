@@ -1,16 +1,16 @@
 import { redirect } from "next/navigation";
-import { getUserToken } from "./session";
 
 const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 export const authHeader = async () => {
-  const token = await getUserToken();
-  const header :Record<string, string> | {} = token
-    ? {
-        authorization: `Bearer ${token}`,
-      }
-    : {}
-  return header;    
+  // const token = await getUserToken();
+  // const header :Record<string, string> | {} = token
+  //   ? {
+  //       authorization: `Bearer ${token}`,
+  //     }
+  //   : {}
+  // return header;    
+  return {};
 };
 
 export const serverMutation = async (path:string, data:any, method = "POST") => {
@@ -32,7 +32,7 @@ export const serverFetch = async (path:string) => {
   return handleStatusCode(res);
 };
 
-export const dataFetch = async (path:string) => {
+export const publicFetch = async (path:string) => {
   const res = await fetch(`${baseUrl}${path}`, {
     cache: "no-store",
   });
