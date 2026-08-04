@@ -18,14 +18,14 @@ interface AppSidebarProps {
 
 export function AppSidebar({ role = "renter" }: AppSidebarProps) {
   const handleLogout = () => {
-    // Add custom logout logic / next-auth signOut here
     window.location.href = "/api/auth/signout";
   };
 
   return (
-    <Sidebar className="border-r border-gray-100 bg-white/70 backdrop-blur-xl">
+    /* 🔴 CHANGED: Replaced bg-white/70 backdrop-blur-xl with solid bg-white z-50 */
+    <Sidebar className="border-r border-gray-100 bg-white z-50">
       {/* Header Badge */}
-      <SidebarHeader className="p-4">
+      <SidebarHeader className="p-4 bg-white">
         <Link href="/" className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-full shadow-md hover:bg-gray-900 transition-colors">
           <LayoutGrid className="h-4 w-4 text-[#f15a14]" />
           <span className="font-bold text-xs tracking-tight">
@@ -35,16 +35,16 @@ export function AppSidebar({ role = "renter" }: AppSidebarProps) {
       </SidebarHeader>
 
       {/* Navigation Links */}
-      <SidebarContent className="px-3">
-        <SidebarGroup>
-          <SidebarGroupContent>
+      <SidebarContent className="px-3 bg-white">
+        <SidebarGroup className="bg-white">
+          <SidebarGroupContent className="bg-white">
             <DashboardNavLinks role={role} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       {/* Footer Logout */}
-      <SidebarFooter className="p-4 border-t border-gray-100">
+      <SidebarFooter className="p-4 border-t border-gray-100 bg-white">
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 rounded-full px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-all"
