@@ -8,6 +8,7 @@ import {
   Loader2, AlertCircle
 } from 'lucide-react'
 import { publicFetch, serverMutation } from '@/lib/core/server'
+import { getUserSession } from '@/lib/core/session'
 
 interface ProfileData {
   phoneNumber: string
@@ -82,8 +83,9 @@ export default function MyProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const data = await publicFetch('/api/users/me')
-        console.log(data)
+        const user = await getUserSession()
+        const data = await publicFetch(`/api/users/me/${user?.id}`)
+        console.log(user, data)
         if (data && data.success && data.data) {
           // Merge with default profile to ensure nested structures exist
           setProfile({
@@ -224,7 +226,8 @@ export default function MyProfilePage() {
     e.preventDefault()
     setSaving(true)
     try {
-      const result = await serverMutation('/api/users/profile', profile, 'PATCH')
+      console.log('profile data',profile)
+      const result = await serverMutation(`/api/users/profile`, profile, 'PATCH')
       if (result && result.success) {
         showToast("Profile details updated successfully!", "success")
         if (result.data) {
