@@ -12,6 +12,7 @@ import { getUserSession } from '@/lib/core/session'
 
 interface ProfileData {
   phoneNumber: string
+  renterType : string
   university: string
   department: string
   academicYear: string
@@ -44,6 +45,7 @@ interface ProfileData {
 
 const DEFAULT_PROFILE: ProfileData = {
   phoneNumber: '',
+  renterType: '',
   university: '',
   department: '',
   academicYear: '',
@@ -128,6 +130,7 @@ export default function MyProfilePage() {
   const calculateCompleteness = () => {
     const fields = [
       profile.phoneNumber,
+      profile.renterType,
       profile.university,
       profile.department,
       profile.academicYear,
@@ -386,6 +389,20 @@ export default function MyProfilePage() {
                   placeholder="e.g. +88017XXXXXXXX"
                   className="w-full px-4 py-3 rounded-2xl border border-gray-100 focus:border-[#f15a14] focus:ring-1 focus:ring-[#f15a14]/20 text-sm focus:outline-none transition-all duration-200"
                 />
+              </div>
+
+                <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase">Renter Type</label>
+                <select 
+                  name="renterType"
+                  value={profile.renterType || ""} 
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-100 focus:border-[#f15a14] text-sm focus:outline-none transition-all duration-200"
+                >
+                  <option value="">Select Renter Type</option>
+                  <option value="bachelor">Bachelor</option>
+                  <option value="family">Family</option>
+                </select>
               </div>
 
               <div className="space-y-2">
