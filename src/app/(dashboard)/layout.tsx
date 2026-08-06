@@ -1,11 +1,14 @@
 import { AppSidebar } from "@/components/dashboard/AppSidebar"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { getUserSession } from "@/lib/core/session";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await getUserSession();
+  const role = user?.accountType as "renter" | "admin" | "landlord" | undefined;
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-gray-50/50 text-gray-950 font-sans">
-        <AppSidebar />
+        <AppSidebar role={role} />
         <main className="flex-1 w-full flex flex-col overflow-x-hidden">
           <div className="flex items-center gap-4 p-4 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-40">
             <SidebarTrigger className="hover:bg-gray-100 rounded-full" />

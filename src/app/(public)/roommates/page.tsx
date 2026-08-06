@@ -140,13 +140,33 @@ export default function RoommatesPage() {
                     </div>
                   </div>
                   {/* Match Score Ring */}
-                  <div className="relative flex items-center justify-center w-12 h-12">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-100 dark:text-slate-800" />
-                      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray="125.6" strokeDashoffset={125.6 - (125.6 * (user.matchScore || 0)) / 100} className={getScoreColor(user.matchScore || 0)} strokeLinecap="round" />
-                    </svg>
-                    <span className="absolute text-xs font-bold">{user.matchScore || 0}%</span>
-                  </div>
+                {/* Match Score Ring */}
+<div className="relative flex items-center justify-center w-12 h-12 flex-shrink-0">
+  <svg className="w-full h-full transform -rotate-90">
+    <circle 
+      cx="50%" 
+      cy="50%" 
+      r="45%" 
+      stroke="currentColor" 
+      strokeWidth="4" 
+      fill="transparent" 
+      className="text-slate-100 dark:bg-slate-800" 
+    />
+    <circle 
+      cx="50%" 
+      cy="50%" 
+      r="45%" 
+      stroke="currentColor" 
+      strokeWidth="4" 
+      fill="transparent" 
+      strokeDasharray={`${2 * Math.PI * 45}%`}
+      strokeDashoffset={`${2 * Math.PI * 45 * (1 - (user.matchScore || 0) / 100)}%`}
+      className={getScoreColor(user.matchScore || 0)} 
+      strokeLinecap="round" 
+    />
+  </svg>
+  <span className="absolute text-xs font-bold">{user.matchScore || 0}%</span>
+</div>
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-2 mb-6">

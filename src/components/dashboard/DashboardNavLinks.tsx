@@ -26,12 +26,12 @@ export default function DashboardNavLinks({ role }: { role?: string }) {
 
   // Role-specific navigation items tailored for RentEase
   const landlordNavLinks: NavItem[] = [
-    { icon: LayoutGrid, href: "/dashboard/landlord", label: "Overview" },
-    { icon: Building2, href: "/dashboard/landlord/my-properties", label: "My Properties" },
-    { icon: PlusCircle, href: "/dashboard/landlord/add-property", label: "List New Flat" },
-    { icon: UserCheck, href: "/dashboard/landlord/applications", label: "Tenant Requests" },
-    { icon: Wallet, href: "/dashboard/landlord/earnings", label: "Earnings & Billing" },
-    { icon: User, href: "/dashboard/landlord/profile", label: "Profile Settings" },
+    { icon: LayoutGrid, href: "/landlord", label: "Overview" },
+    { icon: Building2, href: "/landlord/properties", label: "My Properties" },
+    { icon: PlusCircle, href: "/landlord/add-property", label: "List New Flat" },
+    { icon: UserCheck, href: "/landlord/applications", label: "Tenant Requests" },
+    // { icon: Wallet, href: "/landlord/earnings", label: "Earnings & Billing" },
+    // { icon: User, href: "/landlord/profile", label: "Profile Settings" },
   ];
 
   const renterNavLinks: NavItem[] = [
