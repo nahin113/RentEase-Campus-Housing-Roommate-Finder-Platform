@@ -46,6 +46,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Browse Flats", href: "/flats" },
     { name: "Find Roommates", href: "/roommates" },
+    { name: "Find Groups", href: "/groups" },
     { name: "Pricing", href: "/pricing" },
   ];
 

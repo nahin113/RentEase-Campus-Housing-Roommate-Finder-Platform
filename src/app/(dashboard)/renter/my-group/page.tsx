@@ -6,7 +6,9 @@ import {
   ShieldAlert, 
   LogOut, 
   Sparkles,
-  UserPlus
+  UserPlus,
+  Check,
+  X
 } from "lucide-react";
 import { publicFetch, serverMutation } from "@/lib/core/server";
 import { authClient } from "@/lib/auth-client";
@@ -55,6 +57,17 @@ interface GroupData {
     preferredOccupation: string[];
     tags: string[];
   };
+  joinRequests?: Array<{
+    applicantId: string;
+    message?: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    createdAt: string;
+  }>;
+  invitations?: Array<{
+    invitedUserId: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    createdAt: string;
+  }>;
   membersDetails: Member[];
   joinRequestsDetails?: Member[];
   invitesDetails?: Member[];
@@ -194,6 +207,25 @@ export default function MyGroupPage() {
     }
   };
 
+  const handleRespondJoin = async (applicantId: string, action: 'accepted' | 'rejected') => {
+    if (!group) return;
+    try {
+      const res = await serverMutation(
+        `/api/groups/respond-join/${group._id}`,
+        { applicantId, action },
+        "POST"
+      );
+      if (res && res.success) {
+        toast.success(`Join request ${action} successfully!`);
+        fetchMyGroup();
+      } else {
+        toast.error(res?.message || "Failed to update join request");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "An error occurred");
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
@@ -313,6 +345,101 @@ export default function MyGroupPage() {
                 ))}
               </div>
             </div>
+
+            {/* Join Requests (Visible to Creator) */}
+            {group.creatorId === user?.id && (
+              <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-sm font-bold text-gray-950">Pending Join Requests ({(group.joinRequests || []).filter(r => r.status === 'pending').length})</h3>
+                {((group.joinRequests || []).filter(r => r.status === 'pending').length) > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {(group.joinRequests || []).filter(r => r.status === 'pending').map((reqItem) => {
+                      const applicant = group.joinRequestsDetails?.find(u => u._id === reqItem.applicantId);
+                      if (!applicant) return null;
+                      return (
+                        <div key={reqItem.applicantId} className="py-4 flex flex-col gap-2 first:pt-0 last:pb-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-9 h-9 rounded-full overflow-hidden border border-gray-150 bg-gray-50 shrink-0">
+                                <Image 
+                                  src={applicant.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"} 
+                                  alt={applicant.name} 
+                                  fill 
+                                  className="object-cover" 
+                                />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-gray-950">{applicant.name}</h4>
+                                <p className="text-[10px] text-gray-400 font-medium">
+                                  {applicant.university} • {applicant.department}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => handleRespondJoin(reqItem.applicantId, 'accepted')}
+                                className="p-1.5 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={() => handleRespondJoin(reqItem.applicantId, 'rejected')}
+                                className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          {reqItem.message && (
+                            <p className="text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded-xl p-2.5 leading-normal italic">
+                              "{reqItem.message}"
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 italic">No pending requests to join.</p>
+                )}
+              </div>
+            )}
+
+            {/* Pending Invitations status */}
+            {group.creatorId === user?.id && (
+              <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-sm font-bold text-gray-950">Sent Invitations</h3>
+                {((group.invitations || []).filter(inv => inv.status === 'pending').length) > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {(group.invitations || []).filter(inv => inv.status === 'pending').map((invItem) => {
+                      const invitedUser = group.invitesDetails?.find(u => u._id === invItem.invitedUserId);
+                      return (
+                        <div key={invItem.invitedUserId} className="py-3 flex items-center justify-between first:pt-0 last:pb-0">
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
+                              <Image 
+                                src={invitedUser?.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"} 
+                                alt={invitedUser?.name || "User"} 
+                                fill 
+                                className="object-cover" 
+                              />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold text-gray-950">{invitedUser?.name || "Invited User"}</h4>
+                              <p className="text-[9px] text-gray-400 font-medium">Pending Response</p>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md">
+                            Pending
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 italic">No pending invitations.</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Sidebar Invite and Leave */}
