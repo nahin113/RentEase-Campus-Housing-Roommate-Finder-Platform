@@ -13,6 +13,7 @@ import { getUserSession } from '@/lib/core/session'
 interface ProfileData {
   phoneNumber: string
   renterType : string
+  gender: string
   university: string
   department: string
   academicYear: string
@@ -46,6 +47,7 @@ interface ProfileData {
 const DEFAULT_PROFILE: ProfileData = {
   phoneNumber: '',
   renterType: '',
+  gender: '',
   university: '',
   department: '',
   academicYear: '',
@@ -402,6 +404,21 @@ export default function MyProfilePage() {
                   <option value="">Select Renter Type</option>
                   <option value="bachelor">Bachelor</option>
                   <option value="family">Family</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase">Gender</label>
+                <select 
+                  name="gender"
+                  value={profile.gender || ""} 
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-100 focus:border-[#f15a14] text-sm focus:outline-none transition-all duration-200"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 

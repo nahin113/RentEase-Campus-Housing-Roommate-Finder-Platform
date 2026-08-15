@@ -50,7 +50,7 @@ export default function DashboardNavLinks({ role }: { role?: string }) {
   if (user?.renterType === "bachelor") {
       renterNavLinks.splice(3, 0, { 
         icon: FileText, 
-        href: "/dashboard/renter/my-group", 
+        href: "/renter/my-group", 
         label: "My Group" 
       });
     }
