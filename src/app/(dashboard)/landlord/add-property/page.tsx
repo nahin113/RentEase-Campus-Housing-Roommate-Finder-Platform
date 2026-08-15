@@ -413,13 +413,14 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, Building, Plus } from "lucide-react";
+import { X, Check, Building, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { serverMutation } from "@/lib/core/server";
+import { getUserSession } from "@/lib/core/session";
 
 const AMENITY_OPTIONS = [
   "High-speed Wi-Fi",
@@ -436,11 +437,9 @@ const AMENITY_OPTIONS = [
   "Dining Space"
 ];
 
-const NEIGHBORHOOD_OPTIONS = [
-  { value: "Rupnagar Abashik", label: "Rupnagar Abashik" },
-  { value: "itb-bandung", label: "ITB Bandung" },
-  { value: "coblong", label: "Coblong" },
-  { value: "all-city", label: "All City" }
+const POPULAR_NEIGHBORHOODS = [
+  "Dhanmondi", "Gulshan", "Banani", "Uttara", "Mirpur", 
+  "Rupnagar Abashik", "Bashundhara R/A", "Mohammadpur", "Badda", "Khilgaon"
 ];
 
 export default function AddProperty() {
@@ -452,15 +451,74 @@ export default function AddProperty() {
   // Form State
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [serviceCharge, setServiceCharge] = useState("");
   const [location, setLocation] = useState("");
   const [neighborhood, setNeighborhood] = useState("Rupnagar Abashik");
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState("Rupnagar Abashik");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestionIdx, setActiveSuggestionIdx] = useState(0);
   const [type, setType] = useState("Private Room");
-  const [targetAudience, setTargetAudience] = useState("bachelor");
+  const [targetAudience, setTargetAudience] = useState("both");
   const [desc, setDesc] = useState("");
   const [fullDescription, setFullDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [customAmenity, setCustomAmenity] = useState("");
+
+  const handleNeighborhoodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setNeighborhoodQuery(val);
+    setNeighborhood(val);
+    setShowSuggestions(true);
+    setActiveSuggestionIdx(0);
+  };
+
+  const filteredSuggestions = POPULAR_NEIGHBORHOODS.filter(item =>
+    item.toLowerCase().includes(neighborhoodQuery.toLowerCase())
+  );
+
+  const selectSuggestion = (suggestion: string) => {
+    setNeighborhoodQuery(suggestion);
+    setNeighborhood(suggestion);
+    setShowSuggestions(false);
+  };
+
+  const handleNeighborhoodKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveSuggestionIdx(prev => 
+        prev < filteredSuggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveSuggestionIdx(prev => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (filteredSuggestions[activeSuggestionIdx]) {
+        selectSuggestion(filteredSuggestions[activeSuggestionIdx]);
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
+
+  // Room details (when Entire Flat)
+  const [bedrooms, setBedrooms] = useState(1);
+  const [bathrooms, setBathrooms] = useState(1);
+  const [balconies, setBalconies] = useState(0);
+  const [kitchens, setKitchens] = useState(1);
+  const [hasDiningSpace, setHasDiningSpace] = useState(true);
+
+  // Occupancy & Rules
+  const [minPerson, setMinPerson] = useState(1);
+  const [maxPerson, setMaxPerson] = useState(4);
+  const [condition, setCondition] = useState("well_maintained");
+  const [gateClosingTime, setGateClosingTime] = useState("11:00 PM");
+
+  // Room specs (when Private Room or Shared Co-Living)
+  const [roomSizeSqFt, setRoomSizeSqFt] = useState("");
+  const [bathroomType, setBathroomType] = useState("attached");
+  const [bedType, setBedType] = useState("single");
 
   // Multiple Images upload via external ImgBB API
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -530,14 +588,18 @@ export default function AddProperty() {
       toast.warning("Please upload at least one property photo before listing");
       return;
     }
+    const user = await getUserSession();
+
 
     setSaving(true);
     try {
-      const neighborhoodLabel = NEIGHBORHOOD_OPTIONS.find(o => o.value === neighborhood)?.label || neighborhood;
+      const neighborhoodLabel = neighborhood;
 
       const payload = {
         title,
+        landlordId: user?.id,
         price: Number(price),
+        serviceCharge: Number(serviceCharge) || 0,
         location,
         neighborhood,
         neighborhoodLabel,
@@ -547,12 +609,30 @@ export default function AddProperty() {
         fullDescription,
         image: images[0], // Primary cover image
         images,            // Array of all uploaded images
-        amenities: selectedAmenities
+        amenities: selectedAmenities,
+        roomDetails: {
+          bedrooms,
+          bathrooms,
+          balconies,
+          kitchens,
+          hasDiningSpace
+        },
+        occupancyLimits: {
+          minPerson,
+          maxPerson
+        },
+        condition,
+        gateClosingTime,
+        roomSpecs: (type === "Private Room" || type === "Shared Co-Living") ? {
+          roomSizeSqFt: Number(roomSizeSqFt) || undefined,
+          bathroomType,
+          bedType
+        } : undefined
       };
 
       // Perform POST call using your application's serverMutation helper
       console.log(payload)
-      const result = await serverMutation("/api/v1/landlord/properties", payload, "POST");
+      const result = await serverMutation(`/api/v1/landlord/properties/${user?.id}`, payload, "POST");
 
       if (result?.success || result) {
         toast.success("Flat listed successfully!");
@@ -589,13 +669,13 @@ export default function AddProperty() {
       <form onSubmit={handleSubmit} className="space-y-8 bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm">
         
         {/* Core details */}
-        <div className="space-y-5">
+        <div className="space-y-6">
           <h3 className="text-sm font-bold text-gray-950 flex items-center gap-2 pb-2 border-b border-gray-50">
             <Building className="w-4 h-4 text-[#f15a14]" /> General Information
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 md:col-span-2">
               <label className="text-[10px] font-bold text-gray-400 uppercase">Property Title</label>
               <input 
                 type="text" 
@@ -620,44 +700,101 @@ export default function AddProperty() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Property Type</label>
-              <select 
-                value={type}
-                onChange={e => setType(e.target.value)}
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Service Charge (TK)</label>
+              <input 
+                type="number" 
+                placeholder="Monthly service fee in TK"
+                value={serviceCharge}
+                onChange={e => setServiceCharge(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
-              >
-                <option value="Private Room">Private Room</option>
-                <option value="Entire Flat">Entire Flat</option>
-                <option value="Shared Co-Living">Shared Co-Living</option>
-              </select>
+              />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Target Tenant Audience</label>
-              <select 
-                value={targetAudience}
-                onChange={e => setTargetAudience(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
-              >
-                <option value="bachelor">Bachelor (Student/Job Holder)</option>
-                <option value="family">Family Units</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-400 uppercase">Neighborhood Area</label>
-              <select 
-                value={neighborhood}
-                onChange={e => setNeighborhood(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none"
-              >
-                {NEIGHBORHOOD_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Listing Type</label>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { value: "Entire Flat", label: "Entire Flat", desc: "Rent the entire home" },
+                  { value: "Private Room", label: "Private Room", desc: "Private room with shared areas" },
+                  { value: "Shared Co-Living", label: "Shared Co-Living", desc: "Shared room and facilities" }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setType(opt.value)}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                      type === opt.value
+                        ? "border-[#f15a14] bg-orange-50/20 text-gray-950"
+                        : "border-gray-100 hover:border-gray-200 text-gray-500 bg-white"
+                    }`}
+                  >
+                    <span className="font-extrabold text-xs block mb-0.5">{opt.label}</span>
+                    <span className="text-[9px] font-medium text-gray-400 block">{opt.desc}</span>
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Preferred Renter (Tenant Preference)</label>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { value: "bachelor", label: "Bachelor Only", desc: "Students / Job Holders" },
+                  { value: "family", label: "Family Only", desc: "Married couples / Families" },
+                  { value: "both", label: "Both / Open to All", desc: "No tenant type restriction" }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setTargetAudience(opt.value)}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                      targetAudience === opt.value
+                        ? "border-[#f15a14] bg-orange-50/20 text-gray-950"
+                        : "border-gray-100 hover:border-gray-200 text-gray-500 bg-white"
+                    }`}
+                  >
+                    <span className="font-extrabold text-xs block mb-0.5">{opt.label}</span>
+                    <span className="text-[9px] font-medium text-gray-400 block">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5 relative">
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Neighborhood Area</label>
+              <input
+                type="text"
+                placeholder="Type neighborhood name..."
+                value={neighborhoodQuery}
+                onChange={handleNeighborhoodChange}
+                onKeyDown={handleNeighborhoodKeyDown}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
+                className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
+              />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <ul className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-gray-150 rounded-2xl shadow-xl max-h-48 overflow-y-auto z-50 py-2">
+                  {filteredSuggestions.map((suggestion, index) => (
+                    <li
+                      key={suggestion}
+                      onMouseDown={() => selectSuggestion(suggestion)}
+                      onMouseEnter={() => setActiveSuggestionIdx(index)}
+                      className={`px-4 py-2 text-xs cursor-pointer font-semibold transition-colors ${
+                        index === activeSuggestionIdx
+                          ? "bg-orange-50 text-[#f15a14]"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
               <label className="text-[10px] font-bold text-gray-400 uppercase">Full Location Address</label>
               <input 
                 type="text" 
@@ -667,6 +804,185 @@ export default function AddProperty() {
                 required
                 className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: Conditional Room Specifications */}
+        <div className="space-y-5 pt-4 border-t border-gray-50">
+          <h3 className="text-sm font-bold text-gray-950">Property Layout & Specifications</h3>
+
+          {type === "Entire Flat" ? (
+            <div className="space-y-4">
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Entire Flat Composition</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[
+                  { label: "Bedrooms", val: bedrooms, set: setBedrooms, min: 1 },
+                  { label: "Bathrooms", val: bathrooms, set: setBathrooms, min: 1 },
+                  { label: "Balconies", val: balconies, set: setBalconies, min: 0 },
+                  { label: "Kitchens", val: kitchens, set: setKitchens, min: 1 }
+                ].map(item => (
+                  <div key={item.label} className="p-3 border border-gray-150 rounded-2xl flex flex-col items-center justify-center bg-gray-50/30 gap-2">
+                    <span className="text-[10px] font-extrabold text-gray-500 uppercase">{item.label}</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => item.set(Math.max(item.min, item.val - 1))}
+                        className="w-7 h-7 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-150 bg-white"
+                      >
+                        <Minus className="w-3.5 h-3.5 text-gray-600" />
+                      </button>
+                      <span className="text-xs font-black text-gray-950">{item.val}</span>
+                      <button
+                        type="button"
+                        onClick={() => item.set(item.val + 1)}
+                        className="w-7 h-7 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-150 bg-white"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-gray-600" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setHasDiningSpace(!hasDiningSpace)}
+                  className={`w-10 h-6 rounded-full transition-colors relative outline-none ${
+                    hasDiningSpace ? "bg-[#f15a14]" : "bg-gray-200"
+                  }`}
+                >
+                  <span
+                    className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                      hasDiningSpace ? "right-1" : "left-1"
+                    }`}
+                  />
+                </button>
+                <span className="text-xs font-bold text-gray-700">Dedicated Dining Space Available</span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Room Size (Sq Ft)</label>
+                <input 
+                  type="number" 
+                  placeholder="e.g. 150"
+                  value={roomSizeSqFt}
+                  onChange={e => setRoomSizeSqFt(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Bathroom Type</label>
+                <select 
+                  value={bathroomType}
+                  onChange={e => setBathroomType(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
+                >
+                  <option value="attached">Attached Bathroom</option>
+                  <option value="shared">Shared Bathroom</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-gray-400 uppercase">Bed & Furnishing Status</label>
+                <select 
+                  value={bedType}
+                  onChange={e => setBedType(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
+                >
+                  <option value="single">Single Bed Included</option>
+                  <option value="double">Double Bed Included</option>
+                  <option value="bunk">Bunk Bed Included</option>
+                  <option value="unfurnished">Unfurnished</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Section 3: Property Details & Rules */}
+        <div className="space-y-5 pt-4 border-t border-gray-50">
+          <h3 className="text-sm font-bold text-gray-950">Property Details & Rules</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="space-y-1.5 p-3 border border-gray-150 rounded-2xl flex flex-col items-center justify-center bg-gray-50/30 gap-1.5">
+              <span className="text-[10px] font-extrabold text-gray-500 uppercase">Occupancy Limits</span>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-center">
+                  <span className="text-[8px] font-bold text-gray-400 uppercase">Min</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setMinPerson(Math.max(1, minPerson - 1))}
+                      className="w-5 h-5 rounded-md border border-gray-200 flex items-center justify-center bg-white hover:bg-gray-100"
+                    >
+                      <Minus className="w-2.5 h-2.5 text-gray-600" />
+                    </button>
+                    <span className="text-xs font-black text-gray-950">{minPerson}</span>
+                    <button
+                      type="button"
+                      onClick={() => setMinPerson(minPerson + 1)}
+                      className="w-5 h-5 rounded-md border border-gray-200 flex items-center justify-center bg-white hover:bg-gray-100"
+                    >
+                      <Plus className="w-2.5 h-2.5 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+                <div className="w-[1px] h-8 bg-gray-200" />
+                <div className="flex flex-col items-center">
+                  <span className="text-[8px] font-bold text-gray-400 uppercase">Max</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setMaxPerson(Math.max(minPerson, maxPerson - 1))}
+                      className="w-5 h-5 rounded-md border border-gray-200 flex items-center justify-center bg-white hover:bg-gray-100"
+                    >
+                      <Minus className="w-2.5 h-2.5 text-gray-600" />
+                    </button>
+                    <span className="text-xs font-black text-gray-950">{maxPerson}</span>
+                    <button
+                      type="button"
+                      onClick={() => setMaxPerson(maxPerson + 1)}
+                      className="w-5 h-5 rounded-md border border-gray-200 flex items-center justify-center bg-white hover:bg-gray-100"
+                    >
+                      <Plus className="w-2.5 h-2.5 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Property Condition</label>
+              <select 
+                value={condition}
+                onChange={e => setCondition(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
+              >
+                <option value="brand_new">Brand New</option>
+                <option value="recently_renovated">Recently Renovated</option>
+                <option value="well_maintained">Well Maintained</option>
+                <option value="old">Old</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-gray-400 uppercase">Gate Closing Time</label>
+              <select 
+                value={gateClosingTime}
+                onChange={e => setGateClosingTime(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
+              >
+                <option value="10:00 PM">10:00 PM</option>
+                <option value="10:30 PM">10:30 PM</option>
+                <option value="11:00 PM">11:00 PM</option>
+                <option value="11:30 PM">11:30 PM</option>
+                <option value="12:00 AM">12:00 AM</option>
+                <option value="Flexible/No Gate Restriction">Flexible/No Gate Restriction</option>
+              </select>
             </div>
           </div>
         </div>

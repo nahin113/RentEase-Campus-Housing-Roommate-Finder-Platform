@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   FileText,
 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 interface NavItem {
   label: string;
@@ -22,7 +23,11 @@ interface NavItem {
 }
 
 export default function DashboardNavLinks({ role }: { role?: string }) {
+  const {data : session} = authClient.useSession()
+  const user = session?.user
+  
   const pathname = usePathname();
+
 
   // Role-specific navigation items tailored for RentEase
   const landlordNavLinks: NavItem[] = [
@@ -33,14 +38,22 @@ export default function DashboardNavLinks({ role }: { role?: string }) {
     // { icon: Wallet, href: "/landlord/earnings", label: "Earnings & Billing" },
     // { icon: User, href: "/landlord/profile", label: "Profile Settings" },
   ];
-
+  
   const renterNavLinks: NavItem[] = [
     { icon: LayoutGrid, href: "/renter", label: "Overview" },
     { icon: Search, href: "/flats", label: "Browse Housing" },
     { icon: Users, href: "/roommates", label: "Find Roommates" },
-    { icon: FileText, href: "/dashboard/renter/applications", label: "My Applications" },
+    { icon: FileText, href: "/dashboard/renter/my-applications", label: "My Applications" },
     { icon: User, href: "/renter/profile", label: "My Profile" },
   ];
+
+  if (user?.renterType === "bachelor") {
+      renterNavLinks.splice(3, 0, { 
+        icon: FileText, 
+        href: "/dashboard/renter/my-group", 
+        label: "My Group" 
+      });
+    }
 
   const adminNavLinks: NavItem[] = [
     { icon: LayoutGrid, href: "/dashboard/admin", label: "Admin Overview" },

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { 
@@ -24,6 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { publicFetch } from "@/lib/core/server"
 
 export interface FlatProperty {
   _id: string
@@ -32,6 +33,25 @@ export interface FlatProperty {
   desc: string
   fullDescription?: string
   price: number
+  serviceCharge?: number
+  roomDetails?: {
+    bedrooms: number
+    bathrooms: number
+    balconies: number
+    kitchens: number
+    hasDiningSpace: boolean
+  }
+  occupancyLimits?: {
+    minPerson: number
+    maxPerson: number
+  }
+  condition?: "brand_new" | "recently_renovated" | "well_maintained" | "old" | string
+  gateClosingTime?: string
+  roomSpecs?: {
+    roomSizeSqFt?: number
+    bathroomType?: "attached" | "shared" | string
+    bedType?: "single" | "double" | "bunk" | "unfurnished" | string
+  }
   location: string
   neighborhood: string
   neighborhoodLabel?: string
@@ -60,18 +80,35 @@ export function PropertyPostCard({ flat }: PropertyPostCardProps) {
   const [isLiked, setIsLiked] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [currentImageIdx, setCurrentImageIdx] = useState(0)
+  const [user, setUser] = useState({name: "", image: "", accountType: ""})
+
+  useEffect(() => {
+    const landlordDetails = async ()=> {
+      try{
+        const userData = await publicFetch(`/api/users/${flat.landlordId}`);
+        setUser(userData.data);
+      } catch(err) {
+        console.log(err);
+      }
+    }
+    landlordDetails();
+  }, []);
 
   // Use MongoDB _id as the primary identifier key
   const postId = flat._id || flat.id
+  console.log(user)
 
   // Images handling (supports array of images or single fallback image)
   const displayImages = flat.images && flat.images.length > 0 ? flat.images : [flat.image]
 
   // Default fallback details if landlord data isn't fully supplied by the API
+
+
+
   const landlord = flat.landlord || {
-    name: "Verified Host",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    badge: "Superhost",
+    name: user?.name || "Verified Host",
+    avatar: user?.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    badge: user?.accountType || "Superhost",
     timestamp: flat.createdAt
       ? new Date(flat.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
       : "Just now"
@@ -111,9 +148,21 @@ export function PropertyPostCard({ flat }: PropertyPostCardProps) {
               <div className="flex items-center gap-1.5">
                 <h4 className="text-xs font-black text-gray-950 tracking-tight">{landlord.name}</h4>
                 <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500 shrink-0" />
-                <span className="text-[10px] bg-gray-100 text-gray-600 font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider scale-90">
-                  {flat.targetAudience}
-                </span>
+                {flat.targetAudience === "bachelor" && (
+                  <span className="text-[9px] bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold px-2 py-0.5 rounded-md uppercase tracking-wider scale-90">
+                    Bachelor Only
+                  </span>
+                )}
+                {flat.targetAudience === "family" && (
+                  <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold px-2 py-0.5 rounded-md uppercase tracking-wider scale-90">
+                    Family Only
+                  </span>
+                )}
+                {flat.targetAudience === "both" && (
+                  <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-100 font-bold px-2 py-0.5 rounded-md uppercase tracking-wider scale-90">
+                    Bachelor & Family
+                  </span>
+                )}
               </div>
               <p className="text-[10px] text-gray-400 font-medium">
                 {landlord.timestamp} • Posted from {flat.neighborhoodLabel || flat.neighborhood}

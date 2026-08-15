@@ -67,6 +67,10 @@ export const auth = betterAuth({
         required: false,
         defaultValue: false,
       },
+      renterType: {
+        type: "string",
+        required: false,
+      },
     },
   },
   databaseHooks: {

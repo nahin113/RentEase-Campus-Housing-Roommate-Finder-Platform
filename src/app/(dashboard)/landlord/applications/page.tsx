@@ -237,6 +237,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { publicFetch, serverMutation } from "@/lib/core/server"; 
+import { getUserSession } from "@/lib/core/session";
 
 interface Application {
   _id: string;
@@ -260,10 +261,10 @@ export default function ManageApplications() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchApplications = async () => {
+  const fetchApplications = async (currentLandlordId: string) => {
     setLoading(true);
     try {
-      const result = await publicFetch("/api/v1/landlord/applications");
+      const result = await publicFetch(`/api/v1/landlord/applications/${currentLandlordId}`);
       if (result.success) {
         setApplications(result.data);
       } else {
@@ -278,7 +279,21 @@ export default function ManageApplications() {
   };
 
   useEffect(() => {
-    fetchApplications();
+    const init = async () => {
+      try {
+        const user = await getUserSession();
+        if (user?.id) {
+          fetchApplications(user.id);
+        } else {
+          setLoading(false);
+          toast.error("Landlord session not found. Please log in.");
+        }
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
   // Update status using serverMutation

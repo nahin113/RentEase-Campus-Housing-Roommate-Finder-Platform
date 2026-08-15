@@ -53,7 +53,7 @@ export default function BrowseFlatsPage() {
   const [selectedType, setSelectedType] = useState<string>("")
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string>("")
   const [selectedTargetAudience, setSelectedTargetAudience] = useState<string>("") 
-  const [maxBudget, setMaxBudget] = useState<number>(30000) // Default ৳30,000
+  const [maxBudget, setMaxBudget] = useState<number>(50000) 
   const [sortBy, setSortBy] = useState<string>("newest")
 
   // Pagination states
@@ -148,7 +148,7 @@ export default function BrowseFlatsPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 md:px-16 py-12 min-h-screen bg-white font-sans">
+    <div className="container mx-auto px-6 md:px-16 py-30 min-h-screen bg-white font-sans">
       {/* 1. Header Section */}
       <div className="mb-10 space-y-3">
         <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-950 uppercase leading-tight">

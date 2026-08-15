@@ -351,6 +351,8 @@ import {
   ComposedChart
 } from "recharts";
 
+import { publicFetch } from "@/lib/core/server";
+
 interface StatsData {
   totalProperties: number;
   rentedProperties: number;
@@ -372,16 +374,7 @@ export default function LandlordDashboard() {
       if (sessionPending || !session?.user) return;
 
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
-        const response = await fetch(`${baseUrl}/api/v1/landlord/stats`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include"
-        });
-
-        const result = await response.json();
+        const result = await publicFetch(`/api/v1/landlord/stats/${session.user.id}`);
         if (result.success) {
           setStats(result.data);
         } else {

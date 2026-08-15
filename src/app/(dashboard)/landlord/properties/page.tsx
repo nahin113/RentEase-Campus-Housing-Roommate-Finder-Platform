@@ -452,6 +452,7 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import Image from "next/image";
 import { publicFetch, serverMutation } from "@/lib/core/server"; 
+import { getUserSession } from "@/lib/core/session";
 
 interface Property {
   _id: string;
@@ -480,10 +481,10 @@ export default function ManageProperties() {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [updating, setUpdating] = useState(false);
 
-  const fetchProperties = async () => {
+  const fetchProperties = async (currentLandlordId: string) => {
     setLoading(true);
     try {
-      const result = await publicFetch("/api/v1/landlord/properties");
+      const result = await publicFetch(`/api/v1/landlord/properties/${currentLandlordId}`);
       if (result.success) {
         setProperties(result.data);
       } else {
@@ -498,7 +499,21 @@ export default function ManageProperties() {
   };
 
   useEffect(() => {
-    fetchProperties();
+    const init = async () => {
+      try {
+        const user = await getUserSession();
+        if (user?.id) {
+          fetchProperties(user.id);
+        } else {
+          setLoading(false);
+          toast.error("Landlord session not found. Please log in.");
+        }
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
   // Toggle status using serverMutation

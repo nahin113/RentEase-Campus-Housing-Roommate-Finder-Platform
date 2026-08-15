@@ -17,7 +17,10 @@ import {
   ChevronUp, 
   ArrowLeft,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock,
+  Users,
+  Shield
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -179,9 +182,26 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-black bg-gray-100 text-[#f15a14] px-2 py-1 rounded-md uppercase tracking-wider">
-                  {flat.type}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-black bg-gray-100 text-[#f15a14] px-2 py-1 rounded-md uppercase tracking-wider">
+                    {flat.type}
+                  </span>
+                  {flat.targetAudience === "bachelor" && (
+                    <span className="text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      Suitable for: Bachelor Only
+                    </span>
+                  )}
+                  {flat.targetAudience === "family" && (
+                    <span className="text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      Suitable for: Family Only
+                    </span>
+                  )}
+                  {flat.targetAudience === "both" && (
+                    <span className="text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      Suitable for: Bachelor & Family
+                    </span>
+                  )}
+                </div>
                 <h1 className="text-xl md:text-3xl font-black text-gray-950 tracking-tight leading-tight">
                   {flat.title || `Available ${flat.type} near ${flat.neighborhoodLabel || flat.neighborhood}`}
                 </h1>
@@ -190,53 +210,104 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   <span>{flat.location}</span>
                 </div>
               </div>
-              <div className="bg-[#f15a14]/5 border border-[#f15a14]/10 rounded-2xl p-4 text-right">
+              <div className="bg-[#f15a14]/5 border border-[#f15a14]/10 rounded-2xl p-4 text-right flex flex-col items-end justify-center min-w-[140px]">
                 <span className="text-[10px] font-bold text-gray-400 block uppercase tracking-wider leading-none mb-1">Monthly Rent</span>
                 <span className="text-xl md:text-2xl font-black text-[#f15a14]">৳{flat.price.toLocaleString()}<span className="text-xs font-normal text-gray-500">/mo</span></span>
+                <span className="text-[9px] font-bold bg-[#f15a14]/10 text-[#f15a14] px-2 py-0.5 rounded-full mt-1.5 whitespace-nowrap">
+                  {flat.serviceCharge && flat.serviceCharge > 0 
+                    ? `+ ৳${flat.serviceCharge.toLocaleString()} Service Charge` 
+                    : "Service Charge Included"}
+                </span>
               </div>
             </div>
 
             {/* Quick Specs */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
-                <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
-                  <BedDouble className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Beds</span>
-                  <span className="text-xs font-black text-gray-950">2 Bedrooms</span>
-                </div>
-              </div>
+              {flat.type === "Entire Flat" ? (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <BedDouble className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Beds</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.bedrooms || 1} Bedrooms</span>
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
-                <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
-                  <ShowerHead className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Baths</span>
-                  <span className="text-xs font-black text-gray-950">1 Bathroom</span>
-                </div>
-              </div>
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <ShowerHead className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Baths</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.bathrooms || 1} Bathrooms</span>
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
-                <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
-                  <Car className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Parking</span>
-                  <span className="text-xs font-black text-gray-950">Yes</span>
-                </div>
-              </div>
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <Maximize className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Balconies</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.balconies || 0} Balconies</span>
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
-                <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
-                  <Maximize className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Size</span>
-                  <span className="text-xs font-black text-gray-950">1,200 sqft</span>
-                </div>
-              </div>
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <Car className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Dining Space</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.hasDiningSpace ? "Yes" : "No"}</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <Maximize className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Room Size</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomSpecs?.roomSizeSqFt ? `${flat.roomSpecs.roomSizeSqFt} sqft` : "N/A"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <ShowerHead className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Bathroom</span>
+                      <span className="text-xs font-black text-gray-950 capitalize">{flat.roomSpecs?.bathroomType || "Attached"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <BedDouble className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Bed Type</span>
+                      <span className="text-xs font-black text-gray-950 capitalize">{flat.roomSpecs?.bedType || "Single"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 border border-gray-100">
+                    <div className="p-2 rounded-xl bg-white border border-gray-200/60 text-[#f15a14]">
+                      <Car className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Parking</span>
+                      <span className="text-xs font-black text-gray-950">Yes</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -312,6 +383,60 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
                 <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Valuation Range</span>
                 <span className="text-xs font-bold text-gray-700">৳{(flat.price - 3000).toLocaleString()} - ৳{(flat.price + 5000).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* House Rules & Logistics Section */}
+          <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+            <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">House Rules & Logistics</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Occupancy Limits</span>
+                  <span className="text-xs font-black text-gray-950">
+                    {flat.occupancyLimits?.minPerson || 1} - {flat.occupancyLimits?.maxPerson || 4} Persons
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Gate Curfew</span>
+                  <span className="text-xs font-black text-gray-950">
+                    Closes at {flat.gateClosingTime || "11:00 PM"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Flat Condition</span>
+                  <span className="text-xs font-black text-gray-950 capitalize">
+                    {(flat.condition || "well_maintained").replace(/_/g, " ")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Preference</span>
+                  <span className="text-xs font-black text-gray-950 capitalize">
+                    {flat.targetAudience === "both" ? "Bachelor & Family" : `${flat.targetAudience} Only`}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
