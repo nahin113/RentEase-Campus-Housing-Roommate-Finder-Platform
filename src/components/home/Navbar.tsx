@@ -47,7 +47,6 @@ export default function Navbar() {
     { name: "Browse Flats", href: "/flats" },
     { name: "Find Roommates", href: "/roommates" },
     { name: "Find Groups", href: "/groups" },
-    { name: "Pricing", href: "/pricing" },
   ];
 
   return (

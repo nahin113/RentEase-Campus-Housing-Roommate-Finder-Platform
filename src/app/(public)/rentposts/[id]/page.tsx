@@ -25,7 +25,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PropertyPostCard, FlatProperty } from "@/components/shared/PropertyPostCard"
-import { publicFetch } from "@/lib/core/server"
+import { publicFetch, serverMutation } from "@/lib/core/server"
+import { authClient } from "@/lib/auth-client"
+import { toast } from "react-toastify"
+import { X, ShieldAlert, Sparkles } from "lucide-react"
 import {
   ResponsiveContainer,
   LineChart,
@@ -73,6 +76,60 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
   const [currentImgIdx, setCurrentImgIdx] = useState(0)
   const [descExpanded, setDescExpanded] = useState(false)
+
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+
+  // Apply Modal states
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [applyType, setApplyType] = useState<'single_bachelor' | 'group_bachelor' | null>(null);
+  const [activeGroup, setActiveGroup] = useState<any>(null);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [submittingApp, setSubmittingApp] = useState(false);
+
+  const fetchActiveGroup = async (userId: string) => {
+    try {
+      setGroupLoading(true);
+      const res = await publicFetch(`/api/groups/my-group/${userId}`);
+      if (res && res.success && res.data) {
+        setActiveGroup(res.data);
+      } else {
+        setActiveGroup(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setActiveGroup(null);
+    } finally {
+      setGroupLoading(false);
+    }
+  };
+
+  const handleConfirmApplication = async (type: 'family' | 'single_bachelor' | 'group_bachelor') => {
+    if (!user) {
+      toast.error("Please sign in to apply.");
+      return;
+    }
+    setSubmittingApp(true);
+    try {
+      const payload = {
+        applicantUserId: user.id,
+        applicantType: type,
+        groupId: type === 'group_bachelor' ? activeGroup?._id : null
+      };
+      const res = await serverMutation(`/api/applications/apply/${flat?._id}`, payload, "POST");
+      if (res && res.success) {
+        toast.success(res.message || "Application submitted successfully!");
+        setIsApplyModalOpen(false);
+        window.location.href = "/dashboard/renter/my-applications";
+      } else {
+        toast.error(res?.message || "Failed to submit application");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "An error occurred");
+    } finally {
+      setSubmittingApp(false);
+    }
+  };
 
   useEffect(() => {
     async function loadDetails() {
@@ -647,7 +704,19 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider mb-1">Minimum Stay</span>
                 <span className="text-sm font-black text-gray-950">6 Months contract</span>
               </div>
-              <Button className="w-full bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-6 text-xs font-extrabold tracking-wide shadow-md shadow-orange-500/5 transition-all">
+              <Button 
+                onClick={() => {
+                  if (!user) {
+                    toast.error("Please sign in to apply for rent.");
+                    return;
+                  }
+                  setIsApplyModalOpen(true);
+                  if (user.renterType === "bachelor") {
+                    fetchActiveGroup(user.id);
+                  }
+                }}
+                className="w-full bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-6 text-xs font-extrabold tracking-wide shadow-md shadow-orange-500/5 transition-all"
+              >
                 Apply for Rent
               </Button>
             </div>
@@ -667,6 +736,212 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             {similarFlats.map((sFlat) => (
               <PropertyPostCard key={sFlat._id} flat={sFlat} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Property Rent Application Modal */}
+      {isApplyModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 max-w-md w-full relative space-y-6">
+            <button 
+              onClick={() => {
+                setIsApplyModalOpen(false);
+                setApplyType(null);
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 p-1 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div>
+              <h2 className="text-xl font-black text-gray-950 tracking-tight flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#f15a14]" /> Rent Application
+              </h2>
+              <p className="text-xs text-gray-400 mt-1">
+                {flat.title || "Selected Property Flat"}
+              </p>
+            </div>
+
+            {/* Step 1: Check renterType */}
+            {user?.renterType === "family" ? (
+              // Family Renter: Direct confirmation
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-gray-700">
+                    <span>Monthly Rent:</span>
+                    <span>৳{flat.price.toLocaleString()}</span>
+                  </div>
+                  {flat.serviceCharge && flat.serviceCharge > 0 && (
+                    <div className="flex justify-between text-xs font-bold text-gray-700">
+                      <span>Service Charge:</span>
+                      <span>৳{flat.serviceCharge.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-gray-200/60 pt-2 flex justify-between text-xs font-black text-gray-950">
+                    <span>Renter Type:</span>
+                    <span className="text-emerald-600">Family Application</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => handleConfirmApplication('family')}
+                  disabled={submittingApp}
+                  className="w-full bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-6 text-xs font-extrabold tracking-wide"
+                >
+                  {submittingApp ? "Submitting Application..." : "Confirm & Apply"}
+                </Button>
+              </div>
+            ) : (
+              // Bachelor Renter: Choose Type (Individual vs Group)
+              <div className="space-y-6">
+                {!applyType ? (
+                  // Select Mode
+                  <div className="space-y-4">
+                    <p className="text-xs text-gray-600">
+                      As a bachelor, would you like to apply alone as an individual or together with your roommates group?
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setApplyType('single_bachelor')}
+                        className="p-5 border border-gray-150 hover:border-[#f15a14] bg-white rounded-2xl flex flex-col items-center justify-center gap-2 text-center group transition-all"
+                      >
+                        <Users className="w-6 h-6 text-gray-400 group-hover:text-[#f15a14]" />
+                        <span className="text-xs font-black text-gray-950">Apply Alone</span>
+                        <span className="text-[9px] text-gray-400">Single occupancy</span>
+                      </button>
+                      <button
+                        onClick={() => setApplyType('group_bachelor')}
+                        className="p-5 border border-gray-150 hover:border-[#f15a14] bg-white rounded-2xl flex flex-col items-center justify-center gap-2 text-center group transition-all"
+                      >
+                        <Users className="w-6 h-6 text-gray-400 group-hover:text-[#f15a14]" />
+                        <span className="text-xs font-black text-gray-950">Apply with Group</span>
+                        <span className="text-[9px] text-gray-400">Team up with roommates</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : applyType === 'single_bachelor' ? (
+                  // Single Bachelor Confirmation
+                  <div className="space-y-4">
+                    <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
+                      <div className="flex justify-between text-xs font-bold text-gray-700">
+                        <span>Monthly Rent:</span>
+                        <span>৳{flat.price.toLocaleString()}</span>
+                      </div>
+                      <div className="border-t border-gray-200/60 pt-2 flex justify-between text-xs font-black text-gray-950">
+                        <span>Application Mode:</span>
+                        <span className="text-indigo-600">Single Occupant</span>
+                      </div>
+                      {/* Check limits: Both must equal 1 */}
+                      {((flat.occupancyLimits?.minPerson !== 1) || (flat.occupancyLimits?.maxPerson !== 1)) && (
+                        <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex gap-2 text-[10px] text-red-600 font-bold mt-2 leading-relaxed">
+                          <ShieldAlert className="w-4 h-4 shrink-0" />
+                          <span>This flat occupancy limits are set to {flat.occupancyLimits?.minPerson} - {flat.occupancyLimits?.maxPerson} persons. Single bachelors cannot apply.</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => setApplyType(null)}
+                        className="flex-1 py-3 border border-gray-100 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-500 transition-colors"
+                      >
+                        Back
+                      </button>
+                      <Button 
+                        onClick={() => handleConfirmApplication('single_bachelor')}
+                        disabled={submittingApp || ((flat.occupancyLimits?.minPerson !== 1) || (flat.occupancyLimits?.maxPerson !== 1))}
+                        className="flex-1 bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-3 text-xs font-extrabold"
+                      >
+                        {submittingApp ? "Applying..." : "Confirm & Apply"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // Group Bachelor view
+                  <div className="space-y-4">
+                    {groupLoading ? (
+                      <div className="flex items-center justify-center p-6 gap-2">
+                        <div className="w-5 h-5 border-2 border-t-[#f15a14] border-gray-250 rounded-full animate-spin" />
+                        <span className="text-xs text-gray-400 font-bold">Checking group info...</span>
+                      </div>
+                    ) : !activeGroup ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-2.5 text-xs text-amber-800 leading-relaxed font-medium">
+                          <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                          <span>You don't have an active roommates group. Go to your Renter Dashboard to create or join a roommates squad first.</span>
+                        </div>
+                        <button 
+                          onClick={() => setApplyType(null)}
+                          className="w-full py-3 border border-gray-100 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-500 transition-colors"
+                        >
+                          Back
+                        </button>
+                      </div>
+                    ) : (
+                      // Group is loaded
+                      <div className="space-y-4">
+                        <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-3">
+                          <div className="flex justify-between text-xs font-bold text-gray-950">
+                            <span>Group Name:</span>
+                            <span className="font-black text-[#f15a14]">{activeGroup.name}</span>
+                          </div>
+
+                          {/* Dynamic live validation indicator */}
+                          <div className="flex justify-between items-center text-xs font-bold text-gray-700">
+                            <span>Member Count:</span>
+                            <span>{activeGroup.members?.length || 0} Users</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs font-bold text-gray-700">
+                            <span>Flat Allowed Occupancy:</span>
+                            <span>{flat.occupancyLimits?.minPerson || 1} to {flat.occupancyLimits?.maxPerson || 4} Users</span>
+                          </div>
+
+                          {/* Validation badge */}
+                          <div className="pt-2 border-t border-gray-200/60 flex justify-between items-center text-xs font-black">
+                            <span>Validation Status:</span>
+                            {((activeGroup.members?.length || 0) >= (flat.occupancyLimits?.minPerson || 1) && 
+                              (activeGroup.members?.length || 0) <= (flat.occupancyLimits?.maxPerson || 4)) ? (
+                              <span className="text-emerald-600 flex items-center gap-1">Valid ✅</span>
+                            ) : (
+                              <span className="text-red-600 flex items-center gap-1">Invalid occupancy ❌</span>
+                            )}
+                          </div>
+
+                          {/* Warn if flat price exceeds group's rentBudgetRange.max */}
+                          {activeGroup.attributes?.rentBudgetRange?.max && flat.price > activeGroup.attributes.rentBudgetRange.max && (
+                            <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-2 text-[10px] text-amber-700 font-bold mt-2 leading-relaxed">
+                              <ShieldAlert className="w-4 h-4 shrink-0" />
+                              <span>Warning: Rent fee (৳{flat.price.toLocaleString()}) exceeds group budget ceiling (৳{activeGroup.attributes.rentBudgetRange.max.toLocaleString()}).</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={() => setApplyType(null)}
+                            className="flex-1 py-3 border border-gray-100 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-500 transition-colors"
+                          >
+                            Back
+                          </button>
+                          <Button 
+                            onClick={() => handleConfirmApplication('group_bachelor')}
+                            disabled={
+                              submittingApp || 
+                              !((activeGroup.members?.length || 0) >= (flat.occupancyLimits?.minPerson || 1) && 
+                                (activeGroup.members?.length || 0) <= (flat.occupancyLimits?.maxPerson || 4))
+                            }
+                            className="flex-1 bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-3 text-xs font-extrabold"
+                          >
+                            {submittingApp ? "Applying..." : "Submit Application"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

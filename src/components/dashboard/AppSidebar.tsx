@@ -11,18 +11,18 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
 
 interface AppSidebarProps {
   role?: "landlord" | "renter" | "admin";
 }
 
 export function AppSidebar({ role = "renter" }: AppSidebarProps) {
-  const handleLogout = () => {
-    window.location.href = "/api/auth/signout";
+  const handleLogout = async () => {
+    await authClient.signOut();
   };
 
   return (
-    /* 🔴 CHANGED: Replaced bg-white/70 backdrop-blur-xl with solid bg-white z-50 */
     <Sidebar className="border-r border-gray-100 bg-white z-50">
       {/* Header Badge */}
       <SidebarHeader className="p-4 bg-white">

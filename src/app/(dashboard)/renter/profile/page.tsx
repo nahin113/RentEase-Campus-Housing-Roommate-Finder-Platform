@@ -299,14 +299,14 @@ export default function MyProfilePage() {
           </div>
           <h2 className="text-xl font-bold text-gray-900">
             {completionPercentage === 100 
-              ? "Your profile is fully complete! 🎉" 
+              ? "Your profile is fully complete!" 
               : "Complete your profile to unlock all features"
             }
           </h2>
           <p className="text-xs text-gray-500 leading-relaxed">
-            {completionPercentage < 50 && "💡 Add your target move-in date and preferred neighborhoods so landlords can find you easily."}
-            {completionPercentage >= 50 && completionPercentage < 80 && "💡 Fill in your lifestyle habits to help us suggest compatible roommates."}
-            {completionPercentage >= 80 && completionPercentage < 100 && "💡 Add your social profiles to increase trust in your roommate search!"}
+            {completionPercentage < 50 && "Add your target move-in date and preferred neighborhoods so landlords can find you easily."}
+            {completionPercentage >= 50 && completionPercentage < 80 && "Fill in your lifestyle habits to help us suggest compatible roommates."}
+            {completionPercentage >= 80 && completionPercentage < 100 && "Add your social profiles to increase trust in your roommate search!"}
             {completionPercentage === 100 && "Awesome job! Landlords and roommates can view your complete info and matching preferences."}
           </p>
         </div>
@@ -792,6 +792,7 @@ export default function MyProfilePage() {
         <div className="pt-6 border-t border-gray-50 flex justify-end gap-3">
           {activeTab !== 'basic' && (
             <button
+              key="btn-back"
               type="button"
               onClick={() => {
                 const tabs: ('basic' | 'housing' | 'lifestyle' | 'bio')[] = ['basic', 'housing', 'lifestyle', 'bio']
@@ -806,6 +807,7 @@ export default function MyProfilePage() {
 
           {activeTab !== 'bio' ? (
             <button
+              key="btn-continue"
               type="button"
               onClick={() => {
                 const tabs: ('basic' | 'housing' | 'lifestyle' | 'bio')[] = ['basic', 'housing', 'lifestyle', 'bio']
@@ -818,6 +820,7 @@ export default function MyProfilePage() {
             </button>
           ) : (
             <button
+              key="btn-submit"
               type="submit"
               disabled={saving}
               className="bg-[#f15a14] hover:bg-[#e04f0f] text-white rounded-2xl px-6 py-3.5 flex items-center justify-center font-bold text-xs gap-2 min-w-[140px] shadow-lg shadow-orange-500/10 hover:shadow-orange-500/20 active:scale-98 transition-all duration-200 disabled:opacity-50"

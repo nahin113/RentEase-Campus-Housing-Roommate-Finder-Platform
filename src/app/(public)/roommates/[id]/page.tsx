@@ -2,22 +2,25 @@ import Link from "next/link";
 import { publicFetch } from "@/lib/core/server";
 import { 
   MapPin, GraduationCap, Calendar, DollarSign, 
-  Home, ShieldCheck, Mail, ArrowLeft, User
+  Home, ShieldCheck, ArrowLeft, User
 } from "lucide-react";
 import { FaInstagram, FaLinkedin } from "react-icons/fa";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getUserSession } from "@/lib/core/session";
+import InviteButton from "@/components/roommates/InviteButton";
 
 export default async function RoommateProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
   let user = null;
   let error: string | null = null;
+  let groupData = null;
+  let currentUser = null;
 
   try {
-    const currentUser = await getUserSession();
+    currentUser = await getUserSession();
     const current = currentUser?.id;
-    const target = id
+    const target = id;
     const res = await publicFetch(`/api/v1/${current}/${target}`);
     if (res?.error) {
       error = res.error;
@@ -26,8 +29,15 @@ export default async function RoommateProfilePage({ params }: { params: Promise<
     } else {
       user = res?.data || res;
     }
+
+    if (currentUser?.id) {
+      const groupRes = await publicFetch(`/api/groups/my-group/${currentUser.id}`);
+      if (groupRes && groupRes.success && groupRes.data) {
+        groupData = groupRes.data;
+      }
+    }
   } catch (err) {
-    console.error("Failed to load user", err);
+    console.error("Failed to load user or group data", err);
     error = "Failed to load user profile";
   }
 
@@ -65,7 +75,7 @@ export default async function RoommateProfilePage({ params }: { params: Promise<
         <Link href="/roommates" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-[#f15a14] transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to matches
         </Link>
-
+ 
         {/* Hero Header */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-8 items-start md:items-center relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8">
@@ -99,9 +109,16 @@ export default async function RoommateProfilePage({ params }: { params: Promise<
             </div>
             
             <div className="flex flex-wrap gap-4 pt-2">
-              <button className="flex items-center gap-2 bg-[#f15a14] hover:bg-[#d94f10] text-white px-6 py-3 rounded-full font-medium transition-colors">
-                <Mail className="w-4 h-4" /> Message
-              </button>
+              <InviteButton
+                currentUserId={currentUser?.id || null}
+                groupId={groupData?._id || null}
+                invitedUserId={id}
+                groupMembers={groupData?.members || []}
+                invitations={groupData?.invitations || []}
+                isLocked={!!groupData?.isLocked}
+                isGroupCreator={groupData?.creatorId === currentUser?.id}
+                hasGroup={!!groupData}
+              />
               {user.socials?.linkedin && (
                 <Link href={user.socials.linkedin} target="_blank" className="flex items-center justify-center w-12 h-12 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-blue-600 transition-colors">
                   <FaLinkedin className="w-5 h-5" />

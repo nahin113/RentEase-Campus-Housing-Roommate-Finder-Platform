@@ -6,7 +6,6 @@ import {
   ShieldAlert, 
   LogOut, 
   Sparkles,
-  UserPlus,
   Check,
   X
 } from "lucide-react";
@@ -58,14 +57,16 @@ interface GroupData {
     tags: string[];
   };
   joinRequests?: Array<{
+    _id: string;
     applicantId: string;
     message?: string;
-    status: 'pending' | 'accepted' | 'rejected';
+    status: 'pending' | 'accepted' | 'declined' | 'cancelled';
     createdAt: string;
   }>;
   invitations?: Array<{
+    _id: string;
     invitedUserId: string;
-    status: 'pending' | 'accepted' | 'rejected';
+    status: 'pending' | 'accepted' | 'declined' | 'cancelled';
     createdAt: string;
   }>;
   membersDetails: Member[];
@@ -93,10 +94,6 @@ export default function MyGroupPage() {
   const [occupations, setOccupations] = useState<string[]>(["student"]);
   const [tags, setTags] = useState<string[]>([]);
   const [customTagInput, setCustomTagInput] = useState("");
-
-  // Invite user state
-  const [inviteUserIdInput, setInviteUserIdInput] = useState("");
-  const [inviting, setInviting] = useState(false);
 
   const fetchMyGroup = async () => {
     if (!user?.id) return;
@@ -175,29 +172,7 @@ export default function MyGroupPage() {
     }
   };
 
-  const handleInviteUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!group || !inviteUserIdInput.trim()) return;
-    setInviting(true);
-    try {
-      const res = await serverMutation(
-        `/api/groups/invite/${group._id}`,
-        { invitedUserId: inviteUserIdInput.trim() },
-        "POST"
-      );
-      if (res && res.success) {
-        toast.success("Invitation sent successfully!");
-        setInviteUserIdInput("");
-        fetchMyGroup();
-      } else {
-        toast.error(res?.message || "Failed to send invitation");
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "An error occurred");
-    } finally {
-      setInviting(false);
-    }
-  };
+
 
   const handleOccupationToggle = (occ: string) => {
     if (occupations.includes(occ)) {
@@ -207,16 +182,16 @@ export default function MyGroupPage() {
     }
   };
 
-  const handleRespondJoin = async (applicantId: string, action: 'accepted' | 'rejected') => {
+  const handleRespondJoin = async (requestId: string, action: 'accepted' | 'declined') => {
     if (!group) return;
     try {
       const res = await serverMutation(
-        `/api/groups/respond-join/${group._id}`,
-        { applicantId, action },
-        "POST"
+        `/api/request-invitations/${requestId}/status`,
+        { action },
+        "PATCH"
       );
       if (res && res.success) {
-        toast.success(`Join request ${action} successfully!`);
+        toast.success(`Join request ${action === 'accepted' ? 'accepted' : 'declined'} successfully!`);
         fetchMyGroup();
       } else {
         toast.error(res?.message || "Failed to update join request");
@@ -376,13 +351,13 @@ export default function MyGroupPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <button 
-                                onClick={() => handleRespondJoin(reqItem.applicantId, 'accepted')}
+                                onClick={() => handleRespondJoin(reqItem._id, 'accepted')}
                                 className="p-1.5 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
                               >
                                 <Check className="w-3.5 h-3.5" />
                               </button>
                               <button 
-                                onClick={() => handleRespondJoin(reqItem.applicantId, 'rejected')}
+                                onClick={() => handleRespondJoin(reqItem._id, 'declined')}
                                 className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
                               >
                                 <X className="w-3.5 h-3.5" />
@@ -445,35 +420,6 @@ export default function MyGroupPage() {
           {/* Sidebar Invite and Leave */}
           <div className="space-y-6">
             
-            {/* Invite Form */}
-            {!group.isLocked && (
-              <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-4">
-                <h4 className="text-xs font-black uppercase text-gray-950 tracking-wider flex items-center gap-1.5">
-                  <UserPlus className="w-4 h-4 text-[#f15a14]" /> Invite Roommate
-                </h4>
-                <p className="text-[10px] text-gray-400 leading-normal">
-                  Type user database ID to invite a roommate matching the group requirements.
-                </p>
-                <form onSubmit={handleInviteUser} className="space-y-3">
-                  <input 
-                    type="text" 
-                    placeholder="Enter user ID..."
-                    value={inviteUserIdInput}
-                    onChange={(e) => setInviteUserIdInput(e.target.value)}
-                    required
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={inviting}
-                    className="w-full bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-2.5 text-xs font-bold shadow-md shadow-orange-500/10"
-                  >
-                    {inviting ? "Sending invite..." : "Send Invitation"}
-                  </button>
-                </form>
-              </div>
-            )}
-
             {/* Leave Group Action Card */}
             <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-4">
               <h4 className="text-xs font-black uppercase text-gray-950 tracking-wider">Group Actions</h4>

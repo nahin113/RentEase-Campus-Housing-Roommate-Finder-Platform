@@ -15,6 +15,7 @@ import {
   FileText,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
 
 interface NavItem {
   label: string;
@@ -25,6 +26,17 @@ interface NavItem {
 export default function DashboardNavLinks({ role }: { role?: string }) {
   const {data : session} = authClient.useSession()
   const user = session?.user
+  const [renterType, setRenterType] = useState<string | null>(null)
+  useEffect(() => {
+    const getUser = async ()=> {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/me/${user?.id}`)
+      const data = await res.json()
+      setRenterType(data.data.renterType)
+    }
+    getUser()
+  }, [user])
+  
+  
   
   const pathname = usePathname();
 
@@ -48,7 +60,7 @@ export default function DashboardNavLinks({ role }: { role?: string }) {
     { icon: User, href: "/renter/profile", label: "My Profile" },
   ];
 
-  if (user?.renterType === "bachelor") {
+  if (renterType === "bachelor") {
       renterNavLinks.splice(3, 0, { 
         icon: FileText, 
         href: "/renter/my-group", 

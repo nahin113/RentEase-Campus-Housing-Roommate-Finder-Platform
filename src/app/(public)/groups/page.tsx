@@ -167,8 +167,8 @@ export default function FindGroupsPage() {
     setApplying(true);
     try {
       const res = await serverMutation(
-        `/api/groups/apply-join/${selectedGroup._id}`,
-        { applicantId: user.id, message: applyMessage },
+        `/api/groups/request`,
+        { senderId: user.id, groupId: selectedGroup._id, message: applyMessage },
         "POST"
       );
       if (res && res.success) {
