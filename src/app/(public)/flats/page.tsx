@@ -334,7 +334,7 @@ export default function BrowseFlatsPage() {
             />
             <div className="flex justify-between text-[10px] text-gray-400 font-bold">
               <span>৳3,000</span>
-              <span>৳30,000+</span>
+              <span>৳50,000+</span>
             </div>
           </div>
         </div>

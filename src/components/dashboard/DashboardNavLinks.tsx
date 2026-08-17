@@ -26,17 +26,21 @@ interface NavItem {
 export default function DashboardNavLinks({ role }: { role?: string }) {
   const {data : session} = authClient.useSession()
   const user = session?.user
-  const [renterType, setRenterType] = useState<string | null>(null)
+  
   useEffect(() => {
     const getUser = async ()=> {
+      if (!user?.id) return
       const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/me/${user?.id}`)
       const data = await res.json()
-      setRenterType(data.data.renterType)
+      console.log(data.data)
+      setRenterType(data.data?.renterType)
     }
     getUser()
   }, [user])
+
+  const [renterType, setRenterType] = useState<string | null>(null)
   
-  
+  console.log("renterType:", renterType)
   
   const pathname = usePathname();
 

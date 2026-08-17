@@ -45,6 +45,7 @@ import {
   Pie,
   Cell
 } from "recharts"
+import { redirect } from "next/navigation"
 
 // Dynamically import map component to avoid SSR window is not defined error
 const LeafletMap = dynamic(() => import("@/components/shared/Map"), {
@@ -116,11 +117,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         applicantType: type,
         groupId: type === 'group_bachelor' ? activeGroup?._id : null
       };
+      console.log("payload--->",payload)
       const res = await serverMutation(`/api/applications/apply/${flat?._id}`, payload, "POST");
       if (res && res.success) {
         toast.success(res.message || "Application submitted successfully!");
         setIsApplyModalOpen(false);
-        window.location.href = "/dashboard/renter/my-applications";
+        redirect("/dashboard/renter/my-applications")
       } else {
         toast.error(res?.message || "Failed to submit application");
       }
