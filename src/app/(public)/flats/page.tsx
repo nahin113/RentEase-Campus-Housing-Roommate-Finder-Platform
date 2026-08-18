@@ -77,7 +77,6 @@ export default function BrowseFlatsPage() {
     }
     loadFlats()
   }, [])
-
   // Dynamic Neighborhood options derived directly from MongoDB records
   const availableNeighborhoods = useMemo(() => {
     const list = flatsData

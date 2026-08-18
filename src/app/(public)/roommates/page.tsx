@@ -183,12 +183,9 @@ export default function RoommatesPage() {
                 </div>
 
                 <div className="mt-auto flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Link href={`/roommates/${user._id}`} className="flex-1 text-center py-2 px-4 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium">
+                  <Link href={`/roommates/${user._id}`} className="flex-1 text-center py-2 px-4 rounded-full text-white border border-slate-200 dark:border-slate-700 bg-[#f15a14] hover:bg-slate-50 hover:text-black dark:hover:bg-slate-800 transition-colors text-sm font-medium">
                     View Profile
                   </Link>
-                  <button className="flex-1 py-2 px-4 rounded-full bg-[#f15a14] hover:bg-[#d94f10] text-white transition-colors text-sm font-medium">
-                    Message
-                  </button>
                 </div>
               </div>
             ))}

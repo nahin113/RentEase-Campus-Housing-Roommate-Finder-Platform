@@ -10,9 +10,6 @@ import {
   ShowerHead, 
   Car, 
   Maximize, 
-  Calendar, 
-  Mail, 
-  Phone, 
   ChevronDown, 
   ChevronUp, 
   ArrowLeft,
@@ -20,7 +17,9 @@ import {
   ChevronRight,
   Clock,
   Users,
-  Shield
+  Shield,
+  CalendarDays,
+  BadgeCheck
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,22 +28,6 @@ import { publicFetch, serverMutation } from "@/lib/core/server"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "react-toastify"
 import { X, ShieldAlert, Sparkles } from "lucide-react"
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts"
 import { redirect } from "next/navigation"
 
 // Dynamically import map component to avoid SSR window is not defined error
@@ -63,6 +46,27 @@ interface InsightData {
   yieldVacancy: Array<{ year: string; yield: number; vacancy: number }>
   bedroomsDistribution: Array<{ name: string; count: number }>
   demographics: Array<{ name: string; value: number }>
+}
+
+/** Derive a human-readable "days listed" count from a createdAt ISO string */
+function getDaysListed(createdAt?: string): string {
+  if (!createdAt) return "N/A"
+  const diff = Math.floor(
+    (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)
+  )
+  if (diff === 0) return "Today"
+  if (diff === 1) return "1 Day"
+  return `${diff} Days`
+}
+
+/** Format a date string to a short readable date */
+function formatDate(dateStr?: string): string | null {
+  if (!dateStr) return null
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  })
 }
 
 export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -110,6 +114,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       toast.error("Please sign in to apply.");
       return;
     }
+
+    // Guard: group_bachelor requires an active group
+    if (type === 'group_bachelor' && !activeGroup) {
+      toast.error("You must have an active roommates group to apply as a group.");
+      return;
+    }
+
     setSubmittingApp(true);
     try {
       const payload = {
@@ -117,7 +128,6 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         applicantType: type,
         groupId: type === 'group_bachelor' ? activeGroup?._id : null
       };
-      console.log("payload--->",payload)
       const res = await serverMutation(`/api/applications/apply/${flat?._id}`, payload, "POST");
       if (res && res.success) {
         toast.success(res.message || "Application submitted successfully!");
@@ -203,14 +213,33 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   }
 
   const images = flat.images && flat.images.length > 0 ? flat.images : [flat.image]
-  const landlord = flat.landlord || {
-    name: "Verified Host",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    badge: "Superhost",
-    timestamp: flat.createdAt
-      ? new Date(flat.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-      : "Just now"
-  }
+
+  // --- Resolve host/poster identity dynamically ---
+  // The backend populates landlordId or posterUserId as objects with { name, image, accountType, role }
+  const populatedPoster =
+    typeof flat.posterUserId === "object" && flat.posterUserId?.name
+      ? flat.posterUserId
+      : typeof flat.landlordId === "object" && flat.landlordId?.name
+      ? flat.landlordId
+      : null
+
+  const hostName: string = flat.landlord?.name || populatedPoster?.name || "Verified Host"
+  const hostAvatar: string | null = flat.landlord?.avatar || populatedPoster?.image || null
+  const hostBadge: string =
+    flat.landlord?.badge ||
+    populatedPoster?.accountType ||
+    populatedPoster?.role ||
+    (flat.postedByRole === "renter" ? "Sublet Host" : "Landlord")
+  const hostSince: string | null = formatDate(flat.createdAt)
+
+  // Compute latest yield/vacancy from insights if available
+  const latestYield = insights?.yieldVacancy?.length
+    ? insights.yieldVacancy[insights.yieldVacancy.length - 1].yield
+    : null
+  const latestVacancy = insights?.yieldVacancy?.length
+    ? insights.yieldVacancy[insights.yieldVacancy.length - 1].vacancy
+    : null
+  const daysListed = getDaysListed(flat.createdAt)
 
   // Handle image slider navigation
   const handlePrevImg = () => {
@@ -220,9 +249,6 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const handleNextImg = () => {
     setCurrentImgIdx((prev) => (prev + 1) % images.length)
   }
-
-  // Colors for Demographics Donut Chart
-  const DONUT_COLORS = ["#f15a14", "#3b82f6", "#6b7280"]
 
   return (
     <div className="min-h-screen bg-gray-50/30 py-20 font-sans">
@@ -257,7 +283,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   )}
                   {flat.targetAudience === "both" && (
                     <span className="text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-1 rounded-md uppercase tracking-wider">
-                      Suitable for: Bachelor & Family
+                      Suitable for: Bachelor &amp; Family
                     </span>
                   )}
                 </div>
@@ -290,7 +316,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div>
                       <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Beds</span>
-                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.bedrooms || 1} Bedrooms</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.bedrooms ?? "—"} Bedrooms</span>
                     </div>
                   </div>
 
@@ -300,7 +326,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div>
                       <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Baths</span>
-                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.bathrooms || 1} Bathrooms</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.bathrooms ?? "—"} Bathrooms</span>
                     </div>
                   </div>
 
@@ -310,7 +336,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div>
                       <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Balconies</span>
-                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.balconies || 0} Balconies</span>
+                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.balconies ?? 0} Balconies</span>
                     </div>
                   </div>
 
@@ -320,7 +346,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div>
                       <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Dining Space</span>
-                      <span className="text-xs font-black text-gray-950">{flat.roomDetails?.hasDiningSpace ? "Yes" : "No"}</span>
+                      <span className="text-xs font-black text-gray-950">
+                        {flat.roomDetails?.hasDiningSpace === true
+                          ? "Available"
+                          : flat.roomDetails?.hasDiningSpace === false
+                          ? "Not Available"
+                          : "—"}
+                      </span>
                     </div>
                   </div>
                 </>
@@ -342,7 +374,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div>
                       <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Bathroom</span>
-                      <span className="text-xs font-black text-gray-950 capitalize">{flat.roomSpecs?.bathroomType || "Attached"}</span>
+                      <span className="text-xs font-black text-gray-950 capitalize">{flat.roomSpecs?.bathroomType || "N/A"}</span>
                     </div>
                   </div>
 
@@ -352,7 +384,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </div>
                     <div>
                       <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Bed Type</span>
-                      <span className="text-xs font-black text-gray-950 capitalize">{flat.roomSpecs?.bedType || "Single"}</span>
+                      <span className="text-xs font-black text-gray-950 capitalize">{flat.roomSpecs?.bedType || "N/A"}</span>
                     </div>
                   </div>
 
@@ -361,8 +393,10 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       <Car className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Parking</span>
-                      <span className="text-xs font-black text-gray-950">Yes</span>
+                      <span className="text-[10px] font-extrabold text-gray-400 uppercase block leading-none mb-0.5">Kitchens</span>
+                      <span className="text-xs font-black text-gray-950">
+                        {flat.roomDetails?.kitchens != null ? `${flat.roomDetails.kitchens}` : "N/A"}
+                      </span>
                     </div>
                   </div>
                 </>
@@ -415,77 +449,136 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </div>
           )}
 
-          {/* Investment & Quick Metrics Grid */}
+          {/* Host / Landlord Card */}
+          <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm">
+            <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider mb-5">Listed By</h3>
+            <div className="flex items-center gap-4">
+              <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-gray-100 bg-gray-50 shrink-0">
+                {hostAvatar ? (
+                  <Image src={hostAvatar} alt={hostName} fill className="object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#f15a14]/10 text-[#f15a14] text-xl font-black">
+                    {hostName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-black text-gray-950 truncate">{hostName}</span>
+                  <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-100 shrink-0" />
+                  <span className="text-[9px] font-black bg-[#f15a14]/10 text-[#f15a14] px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap">
+                    {hostBadge}
+                  </span>
+                </div>
+                {hostSince && (
+                  <p className="text-[10px] text-gray-400 font-medium mt-1 flex items-center gap-1">
+                    <CalendarDays className="w-3 h-3" />
+                    Listed on {hostSince} · {flat.neighborhoodLabel || flat.neighborhood}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Location & Yield Metrics */}
           <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
-            <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">Quick Location & Yield Metrics</h3>
+            <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">Quick Location &amp; Yield Metrics</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {/* Median Price — always available from flat.price */}
               <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
                 <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Median Price</span>
                 <span className="text-base font-black text-gray-950">৳{flat.price.toLocaleString()}</span>
               </div>
+
+              {/* Weekly Rent — derived from flat.price */}
               <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
                 <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Weekly Rent</span>
                 <span className="text-base font-black text-gray-950">৳{Math.round(flat.price / 4).toLocaleString()}</span>
               </div>
-              <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Potential Yield</span>
-                <span className="text-base font-black text-emerald-600">6.8% Gross</span>
-              </div>
-              <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Vacancy Rate</span>
-                <span className="text-base font-black text-[#f15a14]">2.5% Low</span>
-              </div>
+
+              {/* Potential Yield — from insights API, hidden if unavailable */}
+              {latestYield !== null && (
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Potential Yield</span>
+                  <span className="text-base font-black text-emerald-600">{latestYield}% Gross</span>
+                </div>
+              )}
+
+              {/* Vacancy Rate — from insights API, hidden if unavailable */}
+              {latestVacancy !== null && (
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Vacancy Rate</span>
+                  <span className="text-base font-black text-[#f15a14]">{latestVacancy}% Low</span>
+                </div>
+              )}
+
+              {/* Days Listed — derived from flat.createdAt */}
               <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
                 <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Days Listed</span>
-                <span className="text-base font-black text-gray-950">12 Days</span>
+                <span className="text-base font-black text-gray-950">{daysListed}</span>
               </div>
+
+              {/* Neighborhood — from insights or flat */}
               <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
-                <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Valuation Range</span>
-                <span className="text-xs font-bold text-gray-700">৳{(flat.price - 3000).toLocaleString()} - ৳{(flat.price + 5000).toLocaleString()}</span>
+                <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-1">Neighborhood</span>
+                <span className="text-xs font-bold text-gray-700 leading-snug">
+                  {insights?.neighborhood || flat.neighborhoodLabel || flat.neighborhood}
+                </span>
               </div>
             </div>
           </div>
 
           {/* House Rules & Logistics Section */}
           <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
-            <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">House Rules & Logistics</h3>
+            <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">House Rules &amp; Logistics</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Occupancy Limits</span>
-                  <span className="text-xs font-black text-gray-950">
-                    {flat.occupancyLimits?.minPerson || 1} - {flat.occupancyLimits?.maxPerson || 4} Persons
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
-                  <Clock className="w-4 h-4" />
+              {/* Occupancy Limits — only render if data exists */}
+              {flat.occupancyLimits && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Occupancy Limits</span>
+                    <span className="text-xs font-black text-gray-950">
+                      {flat.occupancyLimits.minPerson} – {flat.occupancyLimits.maxPerson} Persons
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Gate Curfew</span>
-                  <span className="text-xs font-black text-gray-950">
-                    Closes at {flat.gateClosingTime || "11:00 PM"}
-                  </span>
-                </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
-                  <Shield className="w-4 h-4" />
+              {/* Gate Curfew — only render if gateClosingTime is set */}
+              {flat.gateClosingTime && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Gate Curfew</span>
+                    <span className="text-xs font-black text-gray-950">
+                      Closes at {flat.gateClosingTime}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Flat Condition</span>
-                  <span className="text-xs font-black text-gray-950 capitalize">
-                    {(flat.condition || "well_maintained").replace(/_/g, " ")}
-                  </span>
-                </div>
-              </div>
+              )}
 
+              {/* Flat Condition — only render if condition is set */}
+              {flat.condition && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Flat Condition</span>
+                    <span className="text-xs font-black text-gray-950 capitalize">
+                      {flat.condition.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Preference / Target Audience — always available */}
               <div className="flex items-start gap-3">
                 <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-100 text-[#f15a14] shrink-0">
                   <Users className="w-4 h-4" />
@@ -493,7 +586,11 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <div>
                   <span className="text-[10px] font-extrabold text-gray-400 block uppercase tracking-wider mb-0.5">Preference</span>
                   <span className="text-xs font-black text-gray-950 capitalize">
-                    {flat.targetAudience === "both" ? "Bachelor & Family" : `${flat.targetAudience} Only`}
+                    {flat.targetAudience === "both"
+                      ? "Bachelor & Family"
+                      : flat.targetAudience
+                      ? `${flat.targetAudience} Only`
+                      : "Open to All"}
                   </span>
                 </div>
               </div>
@@ -528,7 +625,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           {/* Amenities details */}
           {flat.amenities && flat.amenities.length > 0 && (
             <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm space-y-4">
-              <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">Amenities & Features</h3>
+              <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">Amenities &amp; Features</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {flat.amenities.map((amenity, idx) => (
                   <div key={idx} className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700">
@@ -552,151 +649,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <LeafletMap location={flat.location} neighborhood={flat.neighborhood} />
           </div>
 
-          {/* Market Insights with Recharts */}
-          {insights && (
-            <div className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 shadow-sm space-y-8">
-              <div className="space-y-1">
-                <h3 className="text-xs font-black uppercase text-gray-950 tracking-wider">Neighborhood Analytics & Market Insights</h3>
-                <p className="text-xs text-gray-400 font-semibold">Real-time local statistics and analysis for {insights.neighborhood}</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* 1. Median Price & Growth */}
-                <div className="space-y-2 border border-gray-100 rounded-2xl p-4 bg-gray-50/20">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">Median Price & Growth</span>
-                  <div className="h-48 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={insights.priceTrends}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
-                        <Line type="monotone" dataKey="price" stroke="#f15a14" strokeWidth={3} dot={{ fill: "#f15a14" }} name="Median Rent (৳)" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* 2. Gross Yield vs Vacancy */}
-                <div className="space-y-2 border border-gray-100 rounded-2xl p-4 bg-gray-50/20">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">Gross Yield & Vacancy Rate</span>
-                  <div className="h-48 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={insights.yieldVacancy}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
-                        <Area type="monotone" dataKey="yield" stackId="1" stroke="#f15a14" fill="#f15a14" fillOpacity={0.1} name="Yield %" />
-                        <Area type="monotone" dataKey="vacancy" stackId="2" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} name="Vacancy %" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* 3. Bedrooms Distribution */}
-                <div className="space-y-2 border border-gray-100 rounded-2xl p-4 bg-gray-50/20">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">Bedrooms Layout Availability</span>
-                  <div className="h-48 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={insights.bedroomsDistribution}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
-                        <Bar dataKey="count" fill="#f15a14" radius={[4, 4, 0, 0]} name="Units" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* 4. Demographics (Pie Chart) */}
-                <div className="space-y-2 border border-gray-100 rounded-2xl p-4 bg-gray-50/20">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">Demographics Age Split</span>
-                  <div className="h-48 w-full flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={insights.demographics}
-                          innerRadius={40}
-                          outerRadius={70}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {insights.demographics.map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex justify-center gap-4 text-[10px] font-extrabold text-gray-600">
-                    {insights.demographics.map((item, index) => (
-                      <div key={index} className="flex items-center gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: DONUT_COLORS[index % DONUT_COLORS.length] }} />
-                        <span>{item.name} ({item.value}%)</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
 
         {/* Sidebar Panel */}
         <div className="space-y-8 lg:sticky lg:top-8">
-          
-          {/* Agent Information Card */}
-          <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="relative w-14 h-14 rounded-full overflow-hidden border border-gray-150 bg-gray-50">
-                <Image src={landlord.avatar} alt={landlord.name} fill className="object-cover" />
-              </div>
-              <div>
-                <h4 className="text-sm font-black text-gray-950 tracking-tight">{landlord.name}</h4>
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">{landlord.badge} • Premium Partner</span>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-3 border-t border-gray-100">
-              <div className="flex items-center gap-2.5 text-xs text-gray-600 font-semibold">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <span>+880 1712 345678</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-xs text-gray-600 font-semibold">
-                <Mail className="w-4 h-4 text-gray-400" />
-                <span>partner@rentease.com</span>
-              </div>
-            </div>
-
-            <Button className="w-full bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-6 text-xs font-bold shadow-md shadow-orange-500/5 transition-all">
-              Contact Agent & View Listing
-            </Button>
-          </div>
-
-          {/* Inspection times card */}
-          <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-4">
-            <h4 className="text-xs font-black uppercase text-gray-950 tracking-wider">Scheduled Inspections</h4>
-            <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex items-start gap-3">
-              <Calendar className="w-4 h-4 text-[#f15a14] shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <span className="text-xs font-black text-gray-950 block">Saturday, August 15</span>
-                <span className="text-[10px] font-bold text-gray-500 block">10:00 AM - 11:30 AM</span>
-              </div>
-            </div>
-            <Button variant="outline" className="w-full rounded-xl py-5 border-gray-200 hover:bg-gray-50 text-xs font-bold text-gray-700">
-              Add to Calendar
-            </Button>
-          </div>
-
           {/* Rent Box / Sticky Applying actions */}
           <div className="bg-white border border-[#f15a14]/20 rounded-3xl p-6 shadow-md shadow-orange-500/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-[#f15a14] text-white text-[9px] font-black uppercase tracking-wider px-3.5 py-1 rounded-bl-2xl">
-              Hot Space
-            </div>
             <div className="space-y-4">
               <div>
                 <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider mb-1">Standard Bond Fee</span>
@@ -704,7 +662,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
               <div>
                 <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider mb-1">Minimum Stay</span>
-                <span className="text-sm font-black text-gray-950">6 Months contract</span>
+                <span className="text-sm font-black text-gray-950">2 Months contract</span>
               </div>
               <Button 
                 onClick={() => {
@@ -727,7 +685,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      {/* Suggested Similars posts */}
+      {/* Suggested Similar posts */}
       {similarFlats.length > 0 && (
         <div className="container mx-auto px-6 md:px-16 pt-16 border-t border-gray-150 mt-16 space-y-8">
           <div className="space-y-2">
@@ -765,9 +723,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </p>
             </div>
 
-            {/* Step 1: Check renterType */}
+            {/* Family Renter: Direct confirmation */}
             {user?.renterType === "family" ? (
-              // Family Renter: Direct confirmation
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
                   <div className="flex justify-between text-xs font-bold text-gray-700">
@@ -794,11 +751,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   {submittingApp ? "Submitting Application..." : "Confirm & Apply"}
                 </Button>
               </div>
+
             ) : (
               // Bachelor Renter: Choose Type (Individual vs Group)
               <div className="space-y-6">
                 {!applyType ? (
-                  // Select Mode
+                  // Step 1 — Select Mode
                   <div className="space-y-4">
                     <p className="text-xs text-gray-600">
                       As a bachelor, would you like to apply alone as an individual or together with your roommates group?
@@ -822,8 +780,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       </button>
                     </div>
                   </div>
+
                 ) : applyType === 'single_bachelor' ? (
-                  // Single Bachelor Confirmation
+                  // Step 2A — Single Bachelor Confirmation
                   <div className="space-y-4">
                     <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-2">
                       <div className="flex justify-between text-xs font-bold text-gray-700">
@@ -834,13 +793,16 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                         <span>Application Mode:</span>
                         <span className="text-indigo-600">Single Occupant</span>
                       </div>
-                      {/* Check limits: Both must equal 1 */}
-                      {((flat.occupancyLimits?.minPerson !== 1) || (flat.occupancyLimits?.maxPerson !== 1)) && (
-                        <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex gap-2 text-[10px] text-red-600 font-bold mt-2 leading-relaxed">
-                          <ShieldAlert className="w-4 h-4 shrink-0" />
-                          <span>This flat occupancy limits are set to {flat.occupancyLimits?.minPerson} - {flat.occupancyLimits?.maxPerson} persons. Single bachelors cannot apply.</span>
-                        </div>
-                      )}
+                      {/* Warn if single-person occupancy is not within the flat's allowed range */}
+                      {flat.occupancyLimits &&
+                        (flat.occupancyLimits.minPerson > 1 || flat.occupancyLimits.maxPerson < 1) && (
+                          <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex gap-2 text-[10px] text-red-600 font-bold mt-2 leading-relaxed">
+                            <ShieldAlert className="w-4 h-4 shrink-0" />
+                            <span>
+                              This flat only allows {flat.occupancyLimits.minPerson}–{flat.occupancyLimits.maxPerson} persons. Single bachelors cannot apply.
+                            </span>
+                          </div>
+                        )}
                     </div>
 
                     <div className="flex gap-3">
@@ -852,26 +814,42 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       </button>
                       <Button 
                         onClick={() => handleConfirmApplication('single_bachelor')}
-                        disabled={submittingApp || ((flat.occupancyLimits?.minPerson !== 1) || (flat.occupancyLimits?.maxPerson !== 1))}
+                        disabled={
+                          submittingApp ||
+                          !!(flat.occupancyLimits &&
+                            (flat.occupancyLimits.minPerson > 1 || flat.occupancyLimits.maxPerson < 1))
+                        }
                         className="flex-1 bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-3 text-xs font-extrabold"
                       >
                         {submittingApp ? "Applying..." : "Confirm & Apply"}
                       </Button>
                     </div>
                   </div>
+
                 ) : (
-                  // Group Bachelor view
+                  // Step 2B — Group Bachelor view
                   <div className="space-y-4">
                     {groupLoading ? (
                       <div className="flex items-center justify-center p-6 gap-2">
-                        <div className="w-5 h-5 border-2 border-t-[#f15a14] border-gray-250 rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-t-[#f15a14] border-gray-200 rounded-full animate-spin" />
                         <span className="text-xs text-gray-400 font-bold">Checking group info...</span>
                       </div>
+
                     ) : !activeGroup ? (
+                      // No active group — show inline prompt instead of letting them submit
                       <div className="space-y-4">
                         <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-2.5 text-xs text-amber-800 leading-relaxed font-medium">
                           <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-                          <span>You don't have an active roommates group. Go to your Renter Dashboard to create or join a roommates squad first.</span>
+                          <span>
+                            You don&apos;t have an active roommates group.{" "}
+                            <Link
+                              href="/renter/groups"
+                              className="underline font-black text-amber-900 hover:text-[#f15a14] transition-colors"
+                            >
+                              Create or join a group
+                            </Link>{" "}
+                            in your Renter Dashboard first, then come back to apply.
+                          </span>
                         </div>
                         <button 
                           onClick={() => setApplyType(null)}
@@ -880,8 +858,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                           Back
                         </button>
                       </div>
+
                     ) : (
-                      // Group is loaded
+                      // Group is loaded — show details and allow submission
                       <div className="space-y-4">
                         <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl space-y-3">
                           <div className="flex justify-between text-xs font-bold text-gray-950">
@@ -889,34 +868,41 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                             <span className="font-black text-[#f15a14]">{activeGroup.name}</span>
                           </div>
 
-                          {/* Dynamic live validation indicator */}
                           <div className="flex justify-between items-center text-xs font-bold text-gray-700">
                             <span>Member Count:</span>
-                            <span>{activeGroup.members?.length || 0} Users</span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs font-bold text-gray-700">
-                            <span>Flat Allowed Occupancy:</span>
-                            <span>{flat.occupancyLimits?.minPerson || 1} to {flat.occupancyLimits?.maxPerson || 4} Users</span>
+                            <span>{activeGroup.members?.length ?? 0} Users</span>
                           </div>
 
-                          {/* Validation badge */}
-                          <div className="pt-2 border-t border-gray-200/60 flex justify-between items-center text-xs font-black">
-                            <span>Validation Status:</span>
-                            {((activeGroup.members?.length || 0) >= (flat.occupancyLimits?.minPerson || 1) && 
-                              (activeGroup.members?.length || 0) <= (flat.occupancyLimits?.maxPerson || 4)) ? (
-                              <span className="text-emerald-600 flex items-center gap-1">Valid ✅</span>
-                            ) : (
-                              <span className="text-red-600 flex items-center gap-1">Invalid occupancy ❌</span>
-                            )}
-                          </div>
-
-                          {/* Warn if flat price exceeds group's rentBudgetRange.max */}
-                          {activeGroup.attributes?.rentBudgetRange?.max && flat.price > activeGroup.attributes.rentBudgetRange.max && (
-                            <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-2 text-[10px] text-amber-700 font-bold mt-2 leading-relaxed">
-                              <ShieldAlert className="w-4 h-4 shrink-0" />
-                              <span>Warning: Rent fee (৳{flat.price.toLocaleString()}) exceeds group budget ceiling (৳{activeGroup.attributes.rentBudgetRange.max.toLocaleString()}).</span>
+                          {flat.occupancyLimits && (
+                            <div className="flex justify-between items-center text-xs font-bold text-gray-700">
+                              <span>Flat Allowed Occupancy:</span>
+                              <span>{flat.occupancyLimits.minPerson} to {flat.occupancyLimits.maxPerson} Users</span>
                             </div>
                           )}
+
+                          {/* Validation badge */}
+                          {flat.occupancyLimits && (
+                            <div className="pt-2 border-t border-gray-200/60 flex justify-between items-center text-xs font-black">
+                              <span>Validation Status:</span>
+                              {((activeGroup.members?.length ?? 0) >= flat.occupancyLimits.minPerson &&
+                                (activeGroup.members?.length ?? 0) <= flat.occupancyLimits.maxPerson) ? (
+                                <span className="text-emerald-600 flex items-center gap-1">Valid ✅</span>
+                              ) : (
+                                <span className="text-red-600 flex items-center gap-1">Invalid occupancy ❌</span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Budget warning */}
+                          {activeGroup.attributes?.rentBudgetRange?.max &&
+                            flat.price > activeGroup.attributes.rentBudgetRange.max && (
+                              <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-2 text-[10px] text-amber-700 font-bold mt-2 leading-relaxed">
+                                <ShieldAlert className="w-4 h-4 shrink-0" />
+                                <span>
+                                  Warning: Rent fee (৳{flat.price.toLocaleString()}) exceeds group budget ceiling (৳{activeGroup.attributes.rentBudgetRange.max.toLocaleString()}).
+                                </span>
+                              </div>
+                            )}
                         </div>
 
                         <div className="flex gap-3">
@@ -929,9 +915,11 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                           <Button 
                             onClick={() => handleConfirmApplication('group_bachelor')}
                             disabled={
-                              submittingApp || 
-                              !((activeGroup.members?.length || 0) >= (flat.occupancyLimits?.minPerson || 1) && 
-                                (activeGroup.members?.length || 0) <= (flat.occupancyLimits?.maxPerson || 4))
+                              submittingApp ||
+                              !!(flat.occupancyLimits && !(
+                                (activeGroup.members?.length ?? 0) >= flat.occupancyLimits.minPerson &&
+                                (activeGroup.members?.length ?? 0) <= flat.occupancyLimits.maxPerson
+                              ))
                             }
                             className="flex-1 bg-[#f15a14] hover:bg-[#d6480a] text-white rounded-xl py-3 text-xs font-extrabold"
                           >
