@@ -103,14 +103,14 @@ export default function HowItWorks() {
                 return (
                   <div key={step.id} className="flex flex-col text-left">
                     {/* Orange Icon Circle */}
-                    <div className="w-9 h-9 rounded-full bg-[#f15a14] flex items-center justify-center mb-5 shadow-md shadow-orange-500/20">
-                      <IconComponent className="w-4 h-4 text-white" />
+                    <div className="w-14 h-14 rounded-full bg-[#f15a14] flex items-center justify-center mb-5 shadow-md shadow-orange-500/20">
+                      <IconComponent className="w-6 h-6 text-white" />
                     </div>
                     {/* Text Content */}
-                    <h4 className="text-sm font-bold text-gray-900 mb-2">
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">
                       {step.title}
                     </h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <p className="text-md text-gray-500 leading-relaxed">
                       {step.description}
                     </p>
                   </div>

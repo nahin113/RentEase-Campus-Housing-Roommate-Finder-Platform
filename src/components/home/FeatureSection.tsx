@@ -3,7 +3,7 @@
 import { useEffect, useRef, } from 'react'
 import Image from 'next/image'
 import { motion, useInView, animate } from 'framer-motion'
-import { Building2, Users, Handshake, Sparkles } from 'lucide-react'
+import { Building2, Users, Handshake} from 'lucide-react'
 
 // --- CUSTOM HOOK FOR COUNTING ANIMATION ---
 function AnimatedCounter({ from = 0, to, duration = 2.5 }: { from?: number, to: number, duration?: number }) {
@@ -71,18 +71,14 @@ export default function PlatformStatistics() {
         {/* --- TOP HEADER ROW --- */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end mb-16 lg:mb-24">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[#f15a14] text-[10px] font-bold tracking-wider uppercase border border-white/5">
-              <Sparkles className="w-3 h-3" />
-              Trusted Ecosystem
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-white leading-tight tracking-tight">
+            <h2 className="text-7xl md:text-5xl lg:text-6xl font-medium text-white leading-tight tracking-tight">
               The Numbers Behind <br className="hidden md:block" /> 
               <span className="text-[#f15a14] font-bold">RentEase.</span>
             </h2>
           </div>
           
           <div className="text-left lg:text-right flex flex-col justify-end h-full">
-            <p className="text-sm text-gray-400 leading-relaxed max-w-md ml-auto">
+            <p className="text-lg text-gray-400 leading-relaxed max-w-md ml-auto">
               We've built a secure, transparent, and highly efficient network bridging the gap between property owners and university renters looking for their perfect home.
             </p>
           </div>

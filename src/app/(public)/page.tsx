@@ -1,5 +1,5 @@
 import Banner from "@/components/home/Banner";
-import CampusNeighborhoods from "@/components/home/CampusNeighborhoods";
+// import CampusNeighborhoods from "@/components/home/CampusNeighborhoods";
 import FeaturedProperties from "@/components/home/FeaturedProperties";
 import FeaturedStudents from "@/components/home/FeaturedStudents";
 import FeatureSection from "@/components/home/FeatureSection";
@@ -13,7 +13,7 @@ export default function Home() {
       <FeaturedProperties/>
       <FeatureSection />
       <FeaturedStudents/>
-      <CampusNeighborhoods/>
+      {/* <CampusNeighborhoods/> */}
       <HowItWorks/>
       <Reviews/>
     </div>

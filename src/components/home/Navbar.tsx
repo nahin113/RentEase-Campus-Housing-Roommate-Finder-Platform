@@ -15,19 +15,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/lib/auth-store";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
 
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
   const { data: session } = authClient.useSession();
   const user = session?.user;
   const role = user?.accountType;
+
+  // Prevent hydration mismatch by confirming client mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -54,7 +60,7 @@ export default function Navbar() {
       <header className="absolute top-0 left-0 z-50 w-full px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-transparent">
         <div className="container mx-auto flex items-center justify-between w-full gap-2 sm:gap-4">
           
-          {/* 1. LOGO (Icon-only on mobile, full branding on sm+) */}
+          {/* 1. LOGO */}
           <Link
             href="/"
             className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 sm:px-4 py-2 rounded-full border border-gray-100 shadow-sm shrink-0"
@@ -99,7 +105,7 @@ export default function Navbar() {
                   <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border">
                     <AvatarImage
                       src={
-                        user?.image ||
+                        (mounted && user?.image) ||
                         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
                       }
                     />
@@ -108,7 +114,7 @@ export default function Navbar() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-xs font-bold text-[#1C1E1B] max-w-[70px] sm:max-w-[90px] truncate hidden xs:inline">
-                    {user?.name || "Guest"}
+                    {mounted ? user?.name || "Guest" : ""}
                   </span>
                   <ChevronDown className="h-3 w-3 text-zinc-400" />
                 </DropdownMenuTrigger>
@@ -122,7 +128,7 @@ export default function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
 
-                  {user ? (
+                  {mounted && user ? (
                     <>
                       <Link href={role ? `/${role}` : "/"}>
                         <DropdownMenuItem className="px-2.5 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 cursor-pointer">
@@ -157,7 +163,7 @@ export default function Navbar() {
               </DropdownMenu>
             </div>
 
-            {/* 4. CONTACT SECTION (Compact on mobile, expanded on desktop) */}
+            {/* 4. CONTACT SECTION */}
             <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md p-1 rounded-full border border-gray-100 shadow-sm pl-2 sm:pl-4">
               <span className="hidden md:inline text-xs font-medium text-gray-800 tracking-wide">
                 rentease@gmail.com
@@ -178,7 +184,7 @@ export default function Navbar() {
               </a>
             </div>
 
-            {/* 5. MOBILE MENU TRIGGER BUTTON (Shows only on mobile/tablet < lg) */}
+            {/* 5. MOBILE MENU TRIGGER BUTTON */}
             <Button
               variant="ghost"
               size="icon"

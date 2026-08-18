@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Quote, Star } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { getUserSession } from "@/lib/core/session"
 
 interface Testimonial {
   id: number
@@ -22,15 +24,14 @@ interface Testimonial {
   }
 }
 
-// 1. RE-ALIGNED RENTEASE MOCK DATA
 const REVIEWS_DATA: Testimonial[] = [
   {
     id: 1,
     category: "Roommate Co-Lease",
     title: "Matched with my ideal roommate and scored a budget-friendly flat!",
     description: "Finding accommodation was stressing me out until I used RentEase. I matched with Alexander based on our shared 'study-first' habits, merged our target budgets, and secured an amazing flat just 5 minutes from campus. Doing it together saved us thousands!",
-    smallImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&auto=format&fit=crop&q=80", // Renters studying together
-    largeImage: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1000&auto=format&fit=crop&q=80", // Warm bedroom setting
+    smallImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&auto=format&fit=crop&q=80",
+    largeImage: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1000&auto=format&fit=crop&q=80",
     rating: 5,
     author: {
       name: "Sarah Jenkins",
@@ -43,8 +44,8 @@ const REVIEWS_DATA: Testimonial[] = [
     category: "Landlord Partner",
     title: "100% Occupancy with zero background-check headaches",
     description: "As a landlord, screening renter tenants used to take weeks. RentEase provides verified renter profiles, pre-assessed budgets, and incredibly smooth digital lease agreement templates. I filled all my four-bedroom suites in record time with reliable tenants.",
-    smallImage: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&auto=format&fit=crop&q=80", // Modern property/key
-    largeImage: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1000&auto=format&fit=crop&q=80", // Beautiful apartment interior
+    smallImage: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&auto=format&fit=crop&q=80",
+    largeImage: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1000&auto=format&fit=crop&q=80",
     rating: 5,
     author: {
       name: "Marcus Brody",
@@ -57,8 +58,8 @@ const REVIEWS_DATA: Testimonial[] = [
     category: "Renter Match",
     title: "Transparent, simple, and exactly as advertised",
     description: "Living out of state made searching for housing incredibly risky. The verified property photos and video walkthroughs on RentEase matched reality perfectly. The messaging dashboard allowed me to directly secure the property with the landlord securely.",
-    smallImage: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=400&auto=format&fit=crop&q=80", // Well-lit desk space
-    largeImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&auto=format&fit=crop&q=80", // Modern collaborative room space
+    smallImage: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=400&auto=format&fit=crop&q=80",
+    largeImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&auto=format&fit=crop&q=80",
     rating: 5,
     author: {
       name: "Alex Rivera",
@@ -70,9 +71,23 @@ const REVIEWS_DATA: Testimonial[] = [
 
 export default function Reviews() {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [direction, setDirection] = useState(1) // 1 = forward, -1 = backward
+  const [direction, setDirection] = useState(1)
+  const [user, setUser] = useState<any>(null)
+  const [mounted, setMounted] = useState<boolean>(false)
 
-  // Autoplay loop (automatically slides every 8 seconds)
+  useEffect(() => {
+    setMounted(true)
+    const getUser = async () => {
+      try {
+        const sessionUser = await getUserSession()
+        setUser(sessionUser)
+      } catch (err) {
+        console.error("Failed to load user session:", err)
+      }
+    }
+    getUser()
+  }, [])
+
   useEffect(() => {
     const timer = setInterval(() => {
       handleNext()
@@ -122,16 +137,34 @@ export default function Reviews() {
         </div>
 
         <div className="lg:col-span-4 space-y-4 flex flex-col items-start lg:items-end text-left lg:text-right">
-          <p className="text-xs md:text-sm text-gray-500 max-w-sm leading-relaxed">
+          <p className="text-lg md:text-sm text-gray-500 max-w-sm leading-relaxed">
             See how matching compatible roommates, simplifying rental applications, and guaranteeing listing transparency makes RentEase the perfect ecosystem.
           </p>
+          
+          {/* ACTION BUTTONS WITH HYDRATION & ROLE GUARD */}
           <div className="flex gap-4">
-            <Button variant="outline" className="border-gray-200 hover:bg-white text-xs font-bold rounded-xl h-10" asChild>
-              <a href="/properties">Browse Homes</a>
-            </Button>
-            <Button className="bg-[#f15a14] hover:bg-[#d6480a] text-white text-xs font-bold rounded-xl h-10 shadow-md shadow-orange-500/10">
-              List Your Property
-            </Button>
+            {mounted && (
+              <Link
+                href="/flats"
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "border-gray-200 hover:bg-white text-xs font-bold rounded-xl h-10"
+                })}
+              >
+                Browse Homes
+              </Link>
+            )}
+
+            {mounted && user?.accountType === "landlord" && (
+              <Link
+                href="/dashboard/landlord/add-property"
+                className={buttonVariants({
+                  className: "bg-[#f15a14] hover:bg-[#d6480a] text-white text-xs font-bold rounded-xl h-10 shadow-md shadow-orange-500/10"
+                })}
+              >
+                List Your Property
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -166,7 +199,6 @@ export default function Reviews() {
                 </div>
 
                 <div className="space-y-3 relative">
-                  {/* Decorative quote icon */}
                   <Quote className="absolute -top-4 -left-2 w-10 h-10 text-gray-100 -z-0 pointer-events-none" />
                   
                   <h3 className="text-lg md:text-xl font-extrabold text-gray-900 tracking-tight leading-snug relative z-10">
@@ -190,8 +222,6 @@ export default function Reviews() {
 
               {/* Author & Controls */}
               <div className="pt-6 border-t border-gray-100 flex items-center justify-between gap-4 mt-6">
-                
-                {/* User Info */}
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10 border border-gray-200">
                     <AvatarImage src={currentReview.author.avatar} alt={currentReview.author.name} className="object-cover" />
@@ -235,7 +265,6 @@ export default function Reviews() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
               
-              {/* Overlaid Highlight Metric Box */}
               <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm px-5 py-3 rounded-2xl border border-gray-100 shadow-xl max-w-[240px]">
                 <p className="text-[10px] font-bold text-[#f15a14] uppercase tracking-wider">RentEase Trust Score</p>
                 <p className="text-lg font-black text-gray-950 mt-0.5">100% Verified</p>

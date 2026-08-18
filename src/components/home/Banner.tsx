@@ -192,26 +192,229 @@
 //   );
 // }
 
+        // <div className="w-full max-w-5xl mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-5">
+        //   <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-end">
+            
+        //     {/* Location */}
+        //     <div className="md:col-span-4 space-y-2 text-left">
+        //       <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 pl-1">
+        //         <MapPin className="w-3.5 h-3.5 text-[#f15a14]" /> Campus Location
+        //       </label>
+        //       <Select>
+        //         <SelectTrigger className="w-full bg-gray-50 border border-gray-100 h-11 text-gray-700 rounded-xl text-xs transition-colors hover:bg-gray-100/70 focus:ring-0">
+        //           <SelectValue placeholder="Search near university area" />
+        //         </SelectTrigger>
+        //         <SelectContent className="rounded-xl bg-white border border-gray-100 shadow-xl max-h-60 min-w-[var(--radix-select-trigger-width)]">
+        //           <SelectItem value="boston" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             Boston University Area
+        //           </SelectItem>
+        //           <SelectItem value="austin" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             UT Austin Area
+        //           </SelectItem>
+        //           <SelectItem value="berkeley" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             UC Berkeley Area
+        //           </SelectItem>
+        //         </SelectContent>
+        //       </Select>
+        //     </div>
+
+        //     {/* Move-in Date */}
+        //     <div className="md:col-span-3 space-y-2 text-left">
+        //       <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 pl-1">
+        //         <CalendarDays className="w-3.5 h-3.5 text-[#f15a14]" /> Move-in Date
+        //       </label>
+        //       <Select>
+        //         <SelectTrigger className="w-full bg-gray-50 border border-gray-100 h-11 text-gray-700 rounded-xl text-xs transition-colors hover:bg-gray-100/70 focus:ring-0">
+        //           <SelectValue placeholder="Select target window" />
+        //         </SelectTrigger>
+        //         <SelectContent className="rounded-xl bg-white border border-gray-100 shadow-xl min-w-[var(--radix-select-trigger-width)]">
+        //           <SelectItem value="immediate" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             Immediate Move-in
+        //           </SelectItem>
+        //           <SelectItem value="fall" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             Fall Semester
+        //           </SelectItem>
+        //           <SelectItem value="spring" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             Spring Semester
+        //           </SelectItem>
+        //         </SelectContent>
+        //       </Select>
+        //     </div>
+
+        //     {/* Price Range */}
+        //     <div className="md:col-span-3 space-y-2 text-left">
+        //       <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 pl-1">
+        //         <CircleDollarSign className="w-3.5 h-3.5 text-[#f15a14]" /> Max Budget
+        //       </label>
+        //       <Select>
+        //         <SelectTrigger className="w-full bg-gray-50 border border-gray-100 h-11 text-gray-700 rounded-xl text-xs transition-colors hover:bg-gray-100/70 focus:ring-0">
+        //           <SelectValue placeholder="Select budget ceiling" />
+        //         </SelectTrigger>
+        //         <SelectContent className="rounded-xl bg-white border border-gray-100 shadow-xl min-w-[var(--radix-select-trigger-width)]">
+        //           <SelectItem value="low" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             $300 - $600 / mo
+        //           </SelectItem>
+        //           <SelectItem value="mid" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             $600 - $1,000 / mo
+        //           </SelectItem>
+        //           <SelectItem value="high" className="text-xs py-2.5 rounded-lg cursor-pointer">
+        //             $1,000+ / mo
+        //           </SelectItem>
+        //         </SelectContent>
+        //       </Select>
+        //     </div>
+
+        //     {/* CTA Button */}
+        //     <div className="md:col-span-2">
+        //       <Button className="w-full h-11 bg-[#f15a14] hover:bg-[#d6480a] text-white text-xs font-bold rounded-xl tracking-wide shadow-md shadow-orange-600/10 transition-all active:scale-95">
+        //         Discover
+        //       </Button>
+        //     </div>
+
+        //   </div>
+        // </div>
+
+
+// "use client";
+
+// import Link from "next/link";
+// import { Button } from "@/components/ui/button";
+// // import {
+// //   Select,
+// //   SelectContent,
+// //   SelectItem,
+// //   SelectTrigger,
+// //   SelectValue,
+// // } from "@/components/ui/select";
+// import TextType from "../TextType";
+// import { useEffect,useState } from "react";
+// import { getUserSession } from "@/lib/core/session";
+// // import { CalendarDays, CircleDollarSign, MapPin } from "lucide-react";
+
+// export default function Banner() {
+//   const [user,setUser] = useState<any>(null)
+//   useEffect(() => {
+//     const getUser = async () => {
+//       const user = await getUserSession()
+//       setUser(user)
+//     }
+//     getUser()
+//   }, [])
+//   return (
+//     <section className="relative w-full min-h-screen flex flex-col justify-center px-6 md:px-16 pt-24 pb-12 overflow-hidden bg-black">
+      
+//       {/* 1. STRETCHED COVER EMBED (No Black/Grey Bars) */}
+//       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+//         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-[177.77777778vh] h-[56.25vw]">
+//           <iframe
+//             src="https://streamable.com/e/z2q49z?autoplay=1&loop=1&muted=1&nocontrols=1"
+//             allow="autoplay; fullscreen"
+//             className="w-full h-full border-0 pointer-events-none"
+//           />
+//         </div>
+
+//         {/* Dark overlay for contrast */}
+//         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 z-10" />
+//       </div>
+
+//       {/* 2. MAIN BANNER CONTENT */}
+//       <div className="container mx-auto relative z-10 w-full flex flex-col justify-between space-y-12 md:space-y-16">
+        
+//         {/* Top Grid Content */}
+//         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+          
+//           {/* Main Heading & CTAs */}
+//           <div className="lg:col-span-8 space-y-5">
+//             <h1 className="text-8xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1]">
+//               Find Your Perfect <br />
+//               <TextType
+//                 text={["Campus Home", "Roommate Match", "Student Housing"]}
+//                 className="text-[#f15a14]"
+//                 typingSpeed={75}
+//                 deletingSpeed={50}
+//                 pauseDuration={1500}
+//                 showCursor={true}
+//                 cursorCharacter="_"
+//                 cursorBlinkDuration={0.5}
+//               />
+//             </h1>
+
+// <div className="flex flex-wrap items-center gap-3 pt-2">
+//   {user?.accountType === "landlord" && (
+//     <Link
+//       href="/dashboard/landlord/add-property"
+//       className={buttonVariants({
+//         size: "lg",
+//         className:
+//           "bg-[#f15a14] hover:bg-[#d6480a] text-white font-semibold rounded-full px-6 text-sm transition-transform active:scale-95",
+//       })}
+//     >
+//       List a Property
+//     </Link>
+//   )}
+
+//   {user?.accountType !== "renter" && (
+//     <Link
+//       href="/flats"
+//       className={buttonVariants({
+//         variant: "outline",
+//         size: "lg",
+//         className:
+//           "bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md font-semibold rounded-full px-6 text-sm transition-transform active:scale-95",
+//       })}
+//     >
+//       Browse Housing
+//     </Link>
+//   )}
+// </div>
+//           </div>
+
+//           {/* Subtext Description */}
+//           <div className="lg:col-span-4">
+//             <p className="text-2xl sm:text-lg font-medium text-gray-200 max-w-sm leading-relaxed">
+//               Secure verified off-campus spaces and match with compatible
+//               roommates based on your budget and habits.
+//             </p>
+//           </div>
+//         </div>
+
+//         {/* 3. FLOATING SEARCH CARD */}
+
+//       </div>
+//     </section>
+//   );
+// }
+
 
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { buttonVariants } from "@/components/ui/button";
 import TextType from "../TextType";
-import { CalendarDays, CircleDollarSign, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getUserSession } from "@/lib/core/session";
 
 export default function Banner() {
+  const [user, setUser] = useState<any>(null);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const getUser = async () => {
+      try {
+        const sessionUser = await getUserSession();
+        setUser(sessionUser);
+      } catch (err) {
+        console.error("Failed to load user session:", err);
+      }
+    };
+    getUser();
+  }, []);
+
   return (
     <section className="relative w-full min-h-screen flex flex-col justify-center px-6 md:px-16 pt-24 pb-12 overflow-hidden bg-black">
       
-      {/* 1. STRETCHED COVER EMBED (No Black/Grey Bars) */}
+      {/* 1. STRETCHED COVER EMBED */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-[177.77777778vh] h-[56.25vw]">
           <iframe
@@ -220,24 +423,22 @@ export default function Banner() {
             className="w-full h-full border-0 pointer-events-none"
           />
         </div>
-
-        {/* Dark overlay for contrast */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 z-10" />
       </div>
 
       {/* 2. MAIN BANNER CONTENT */}
       <div className="container mx-auto relative z-10 w-full flex flex-col justify-between space-y-12 md:space-y-16">
         
-        {/* Top Grid Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
           
-          {/* Main Heading & CTAs */}
           <div className="lg:col-span-8 space-y-5">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1]">
+            {/* INCREASED HEADING SIZES: text-5xl -> sm:text-7xl -> md:text-8xl -> lg:text-[7rem] */}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[6rem] font-extrabold text-white tracking-tight leading-[1.05]">
               Find Your Perfect <br />
               <TextType
                 text={["Campus Home", "Roommate Match", "Student Housing"]}
-                className="text-[#f15a14]"
+                /* Synced sizing here so typing effect matches header scale */
+                className="text-[#f15a14] text-5xl sm:text-7xl md:text-8xl lg:text-[7rem]"
                 typingSpeed={75}
                 deletingSpeed={50}
                 pauseDuration={1500}
@@ -247,116 +448,43 @@ export default function Banner() {
               />
             </h1>
 
+            {/* ACTION BUTTONS */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Button
-                asChild
-                size="lg"
-                className="bg-[#f15a14] hover:bg-[#d6480a] text-white font-semibold rounded-full px-6 text-sm transition-transform active:scale-95"
-              >
-                <Link href="/dashboard/landlord/add-property">
+              {mounted && user?.accountType === "landlord" && (
+                <Link
+                  href="/landlord/add-property"
+                  className={buttonVariants({
+                    size: "lg",
+                    className:
+                      "bg-[#f15a14] hover:bg-[#d6480a] text-white font-semibold rounded-full px-6 text-sm transition-transform active:scale-95",
+                  })}
+                >
                   List a Property
                 </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md font-semibold rounded-full px-6 text-sm transition-transform active:scale-95"
-              >
-                <Link href="/flats">Browse Housing</Link>
-              </Button>
+              )}
+
+              {mounted && (
+                <Link
+                  href="/flats"
+                  className={buttonVariants({
+                    variant: "outline",
+                    size: "lg",
+                    className:
+                      "bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md font-semibold rounded-full px-6 text-sm transition-transform active:scale-95",
+                  })}
+                >
+                  Browse Housing
+                </Link>
+              )}
             </div>
           </div>
 
-          {/* Subtext Description */}
           <div className="lg:col-span-4">
-            <p className="text-base sm:text-lg font-medium text-gray-200 max-w-sm leading-relaxed">
+            {/* INCREASED SUBTEXT SIZE: text-lg -> md:text-xl -> lg:text-2xl */}
+            <p className="text-lg sm:text-xl lg:text-2xl font-medium text-gray-200 max-w-md leading-relaxed">
               Secure verified off-campus spaces and match with compatible
               roommates based on your budget and habits.
             </p>
-          </div>
-        </div>
-
-        {/* 3. FLOATING SEARCH CARD */}
-        <div className="w-full max-w-5xl mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-5">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-end">
-            
-            {/* Location */}
-            <div className="md:col-span-4 space-y-2 text-left">
-              <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 pl-1">
-                <MapPin className="w-3.5 h-3.5 text-[#f15a14]" /> Campus Location
-              </label>
-              <Select>
-                <SelectTrigger className="w-full bg-gray-50 border border-gray-100 h-11 text-gray-700 rounded-xl text-xs transition-colors hover:bg-gray-100/70 focus:ring-0">
-                  <SelectValue placeholder="Search near university area" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl bg-white border border-gray-100 shadow-xl max-h-60 min-w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="boston" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    Boston University Area
-                  </SelectItem>
-                  <SelectItem value="austin" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    UT Austin Area
-                  </SelectItem>
-                  <SelectItem value="berkeley" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    UC Berkeley Area
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Move-in Date */}
-            <div className="md:col-span-3 space-y-2 text-left">
-              <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 pl-1">
-                <CalendarDays className="w-3.5 h-3.5 text-[#f15a14]" /> Move-in Date
-              </label>
-              <Select>
-                <SelectTrigger className="w-full bg-gray-50 border border-gray-100 h-11 text-gray-700 rounded-xl text-xs transition-colors hover:bg-gray-100/70 focus:ring-0">
-                  <SelectValue placeholder="Select target window" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl bg-white border border-gray-100 shadow-xl min-w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="immediate" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    Immediate Move-in
-                  </SelectItem>
-                  <SelectItem value="fall" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    Fall Semester
-                  </SelectItem>
-                  <SelectItem value="spring" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    Spring Semester
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Price Range */}
-            <div className="md:col-span-3 space-y-2 text-left">
-              <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 pl-1">
-                <CircleDollarSign className="w-3.5 h-3.5 text-[#f15a14]" /> Max Budget
-              </label>
-              <Select>
-                <SelectTrigger className="w-full bg-gray-50 border border-gray-100 h-11 text-gray-700 rounded-xl text-xs transition-colors hover:bg-gray-100/70 focus:ring-0">
-                  <SelectValue placeholder="Select budget ceiling" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl bg-white border border-gray-100 shadow-xl min-w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="low" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    $300 - $600 / mo
-                  </SelectItem>
-                  <SelectItem value="mid" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    $600 - $1,000 / mo
-                  </SelectItem>
-                  <SelectItem value="high" className="text-xs py-2.5 rounded-lg cursor-pointer">
-                    $1,000+ / mo
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* CTA Button */}
-            <div className="md:col-span-2">
-              <Button className="w-full h-11 bg-[#f15a14] hover:bg-[#d6480a] text-white text-xs font-bold rounded-xl tracking-wide shadow-md shadow-orange-600/10 transition-all active:scale-95">
-                Discover
-              </Button>
-            </div>
-
           </div>
         </div>
 

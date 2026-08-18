@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Building2, Search, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 
 export default function NotFound() {
   return (
@@ -16,7 +16,7 @@ export default function NotFound() {
 
         {/* Text Details */}
         <div className="space-y-2">
-          <span className="text-[10px] font-black uppercase text-[#f15a14] tracking-widest bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
+          <span className="text-[10px] font-black uppercase text-[#f15a14] tracking-widest bg-orange-50 px-3 py-1 rounded-full border border-orange-100 inline-block">
             Error 404
           </span>
           <h1 className="text-2xl font-black text-gray-950 tracking-tight pt-2">
@@ -28,24 +28,26 @@ export default function NotFound() {
         </div>
 
         {/* Navigation Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          <Button
-            asChild
-            className="w-full bg-[#f15a14] hover:bg-[#d6480a] text-white font-extrabold text-xs rounded-2xl h-11 transition-all"
+        <div className="flex flex-col sm:flex-row gap-3 pt-2 w-full">
+          <Link
+            href="/flats"
+            className={buttonVariants({
+              className: "w-full sm:flex-1 bg-[#f15a14] hover:bg-[#d6480a] text-white font-extrabold text-xs rounded-2xl h-11 transition-all justify-center"
+            })}
           >
-            <Link href="/flats">
-              Browse Available Flats
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-2xl h-11 transition-all"
+            Browse Available Flats
+          </Link>
+
+          <Link
+            href="/"
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full sm:flex-1 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-2xl h-11 transition-all justify-center gap-1.5"
+            })}
           >
-            <Link href="/">
-              <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back to Home
-            </Link>
-          </Button>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Home</span>
+          </Link>
         </div>
       </div>
     </div>
