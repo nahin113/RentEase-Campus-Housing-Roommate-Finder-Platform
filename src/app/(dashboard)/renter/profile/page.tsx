@@ -76,6 +76,7 @@ const DEFAULT_PROFILE: ProfileData = {
 }
 
 export default function MyProfilePage() {
+
   const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -89,7 +90,6 @@ export default function MyProfilePage() {
       try {
         const user = await getUserSession()
         const data = await publicFetch(`/api/users/me/${user?.id}`)
-        console.log(user, data)
         if (data && data.success && data.data) {
           // Merge with default profile to ensure nested structures exist
           setProfile({
@@ -133,6 +133,7 @@ export default function MyProfilePage() {
     const fields = [
       profile.phoneNumber,
       profile.renterType,
+      profile.gender,
       profile.university,
       profile.department,
       profile.academicYear,
@@ -168,6 +169,7 @@ export default function MyProfilePage() {
   // Handle simple input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
+    console.log('name,value',name,value)
     if (name.includes('.')) {
       const [parent, child] = name.split('.')
       setProfile(prev => ({
@@ -231,7 +233,6 @@ export default function MyProfilePage() {
     e.preventDefault()
     setSaving(true)
     try {
-      console.log('profile data',profile)
       const result = await serverMutation(`/api/users/profile`, profile, 'PATCH')
       if (result && result.success) {
         showToast("Profile details updated successfully!", "success")
@@ -243,6 +244,7 @@ export default function MyProfilePage() {
               ? new Date(result.data.targetMoveInDate).toISOString().split('T')[0]
               : ''
           }))
+          console.log('profile data',profile)
         }
       } else {
         showToast(result.message || "Failed to update profile", "error")

@@ -122,7 +122,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       if (res && res.success) {
         toast.success(res.message || "Application submitted successfully!");
         setIsApplyModalOpen(false);
-        redirect("/dashboard/renter/my-applications")
+        redirect("/renter/my-applications")
       } else {
         toast.error(res?.message || "Failed to submit application");
       }

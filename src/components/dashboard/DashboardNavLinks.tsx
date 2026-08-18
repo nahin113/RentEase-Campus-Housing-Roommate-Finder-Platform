@@ -60,7 +60,7 @@ export default function DashboardNavLinks({ role }: { role?: string }) {
     { icon: Search, href: "/flats", label: "Browse Housing" },
     { icon: Users, href: "/roommates", label: "Find Roommates" },
     { icon: Users, href: "/groups", label: "Find Groups" },
-    { icon: FileText, href: "/dashboard/renter/my-applications", label: "My Applications" },
+    { icon: FileText, href: "/renter/my-applications", label: "My Applications" },
     { icon: User, href: "/renter/profile", label: "My Profile" },
   ];
 
