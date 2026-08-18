@@ -7,11 +7,9 @@ import {
   Building2,
   PlusCircle,
   Users,
-  Wallet,
   UserCheck,
   Search,
   User,
-  ShieldCheck,
   FileText,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -73,11 +71,9 @@ export default function DashboardNavLinks({ role }: { role?: string }) {
     }
 
   const adminNavLinks: NavItem[] = [
-    { icon: LayoutGrid, href: "/dashboard/admin", label: "Admin Overview" },
-    { icon: Users, href: "/dashboard/admin/manage-users", label: "Manage Users" },
-    { icon: Building2, href: "/dashboard/admin/manage-properties", label: "Approve Listings" },
-    { icon: ShieldCheck, href: "/dashboard/admin/verifications", label: "ID Verifications" },
-    { icon: Wallet, href: "/dashboard/admin/transactions", label: "Transactions" },
+    { icon: LayoutGrid, href: "/admin", label: "Admin Overview" },
+    { icon: Users, href: "/admin/manage-users", label: "Manage Users" },
+    { icon: Building2, href: "/admin/manage-properties", label: "Approve Listings" },
   ];
 
   const navLinksMap: Record<string, NavItem[]> = {
