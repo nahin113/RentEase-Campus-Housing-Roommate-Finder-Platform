@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
-import { Search, Eye, Trash2, MapPin } from "lucide-react";
+import { Search, Eye, Trash2, MapPin, Check, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { publicFetch, serverMutation } from "@/lib/core/server";
+import { toast } from "react-toastify";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,9 @@ interface PropertyItem {
   price: number;
   location: string;
   neighborhoodLabel: string;
-  status: "available" | "rented" | "pending" | string;
+  status: "pending_approval" | "available" | "rented" | "rejected" | string;
+  postedByRole: "landlord" | "renter";
+  type: string;
   image: string;
   images?: string[];
   landlordId?: LandlordInfo;
@@ -40,23 +43,32 @@ export default function ManagePropertiesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<PropertyItem | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"pending" | "active">("pending");
 
-  useEffect(() => {
-    async function loadProperties() {
-      try {
-        setLoading(true);
-        const res = await publicFetch("/api/admin/properties");
-        if (res?.success && Array.isArray(res.data)) {
+  const loadProperties = async () => {
+    try {
+      setLoading(true);
+      // Fetch stats for the tab
+      const statusParam = activeTab === "pending" ? "pending_approval" : "";
+      const res = await publicFetch(`/api/admin/properties?status=${statusParam}`);
+      if (res?.success && Array.isArray(res.data)) {
+        // If active tab, filter out pending approval
+        if (activeTab === "active") {
+          setProperties(res.data.filter((p: PropertyItem) => p.status !== "pending_approval"));
+        } else {
           setProperties(res.data);
         }
-      } catch (err) {
-        console.error("Failed to load properties:", err);
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      console.error("Failed to load properties:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadProperties();
-  }, []);
+  }, [activeTab]);
 
   const filteredProperties = useMemo(() => {
     if (!searchQuery.trim()) return properties;
@@ -68,12 +80,29 @@ export default function ManagePropertiesPage() {
     );
   }, [properties, searchQuery]);
 
+  const handleApprove = async (propertyId: string) => {
+    try {
+      const res = await serverMutation(`/api/admin/properties/approve/${propertyId}`, {}, "PUT");
+      if (res?.success) {
+        toast.success("Listing approved successfully!");
+        setProperties((prev) => prev.filter((p) => p._id !== propertyId));
+      } else {
+        toast.error(res?.message || "Failed to approve listing");
+      }
+    } catch (err) {
+      console.error("Failed to approve property:", err);
+    }
+  };
+
   const handleDelete = async (propertyId: string) => {
     try {
       const res = await serverMutation(`/api/admin/properties/${propertyId}`, {}, "DELETE");
       if (res?.success) {
+        toast.success("Listing rejected and deleted successfully!");
         setProperties((prev) => prev.filter((p) => p._id !== propertyId));
         setDeleteConfirmId(null);
+      } else {
+        toast.error(res?.message || "Failed to delete listing");
       }
     } catch (err) {
       console.error("Failed to delete property:", err);
@@ -84,10 +113,34 @@ export default function ManagePropertiesPage() {
     <div className="w-full min-h-screen bg-gray-50/30 space-y-10 animate-fade-in font-sans">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-black tracking-tight text-gray-950 uppercase">Approve & Moderation Listings</h1>
+        <h1 className="text-3xl font-black tracking-tight text-gray-950 uppercase">Approve & Moderate Listings</h1>
         <p className="text-sm text-gray-500 mt-1">
           Review live advertisements, preview user-submitted listings, and delete invalid or fraudulent posts.
         </p>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex gap-4 border-b border-gray-150">
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${
+            activeTab === "pending"
+              ? "border-[#f15a14] text-[#f15a14]"
+              : "border-transparent text-gray-400 hover:text-gray-900"
+          }`}
+        >
+          Pending Approval
+        </button>
+        <button
+          onClick={() => setActiveTab("active")}
+          className={`pb-3 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${
+            activeTab === "active"
+              ? "border-[#f15a14] text-[#f15a14]"
+              : "border-transparent text-gray-400 hover:text-gray-900"
+          }`}
+        >
+          Active Listings
+        </button>
       </div>
 
       {/* Control Actions / Search bar */}
@@ -111,10 +164,10 @@ export default function ManagePropertiesPage() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/60">
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Listing</th>
-                <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Landlord</th>
+                <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Poster Role</th>
+                <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Contact details</th>
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Location</th>
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Rent Rate</th>
-                <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
                 <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
@@ -128,17 +181,17 @@ export default function ManagePropertiesPage() {
                         <Skeleton className="h-4 w-32 bg-gray-100" />
                       </div>
                     </td>
+                    <td className="p-5"><Skeleton className="h-4 w-20 bg-gray-100" /></td>
                     <td className="p-5"><Skeleton className="h-4 w-28 bg-gray-100" /></td>
                     <td className="p-5"><Skeleton className="h-4 w-24 bg-gray-100" /></td>
                     <td className="p-5"><Skeleton className="h-4 w-16 bg-gray-100" /></td>
-                    <td className="p-5"><Skeleton className="h-5 w-16 rounded-full bg-gray-100" /></td>
                     <td className="p-5 text-right"><Skeleton className="h-8 w-24 rounded-full bg-gray-100 ml-auto" /></td>
                   </tr>
                 ))
               ) : filteredProperties.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-10 text-center text-xs font-bold text-gray-400 uppercase">
-                    No properties listed
+                    No properties in this category
                   </td>
                 </tr>
               ) : (
@@ -154,14 +207,28 @@ export default function ManagePropertiesPage() {
                             className="object-cover"
                           />
                         </div>
-                        <span className="text-xs font-bold text-gray-950 truncate max-w-[200px] block">
-                          {property.title}
-                        </span>
+                        <div className="flex flex-col max-w-[180px]">
+                          <span className="text-xs font-bold text-gray-950 truncate block">
+                            {property.title}
+                          </span>
+                          <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">{property.type}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="p-5">
+                      <span
+                        className={`inline-flex items-center text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${
+                          property.postedByRole === "landlord"
+                            ? "bg-purple-50 text-purple-700 border-purple-100"
+                            : "bg-blue-50 text-blue-700 border-blue-100"
+                        }`}
+                      >
+                        {property.postedByRole === "landlord" ? "Landlord Post" : "Renter Sublet"}
+                      </span>
+                    </td>
+                    <td className="p-5">
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-900">{property.landlordId?.name || "Unknown Landlord"}</span>
+                        <span className="text-xs font-bold text-gray-900">{property.landlordId?.name || "Unknown"}</span>
                         <span className="text-[10px] text-gray-400">{property.landlordId?.email || ""}</span>
                       </div>
                     </td>
@@ -174,19 +241,6 @@ export default function ManagePropertiesPage() {
                     <td className="p-5 text-xs font-extrabold text-gray-950">
                       ৳{property.price?.toLocaleString()}
                     </td>
-                    <td className="p-5">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-bold border px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
-                          property.status === "available"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                            : property.status === "rented"
-                            ? "bg-blue-50 text-blue-700 border-blue-100"
-                            : "bg-amber-50 text-amber-700 border-amber-100"
-                        }`}
-                      >
-                        {property.status}
-                      </span>
-                    </td>
                     <td className="p-5 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
@@ -195,6 +249,14 @@ export default function ManagePropertiesPage() {
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </Button>
+                        {activeTab === "pending" && (
+                          <Button
+                            onClick={() => handleApprove(property._id)}
+                            className="rounded-full text-[10px] font-bold uppercase tracking-wider h-8 w-8 p-0 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                         <Button
                           onClick={() => setDeleteConfirmId(property._id)}
                           className="rounded-full text-[10px] font-bold uppercase tracking-wider h-8 w-8 p-0 bg-red-50 hover:bg-red-100 text-red-600 transition-all"
@@ -245,13 +307,13 @@ export default function ManagePropertiesPage() {
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-black text-gray-950 uppercase tracking-wider block">Landlord Details</span>
+                <span className="text-xs font-black text-gray-950 uppercase tracking-wider block">Contact Details ({selectedProperty.postedByRole})</span>
                 <div className="flex items-center gap-3 p-3 bg-gray-50/50 border border-gray-100 rounded-2xl">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-xs text-[#f15a14]">
                     {selectedProperty.landlordId?.name?.[0]?.toUpperCase() || "L"}
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-900">{selectedProperty.landlordId?.name || "Unknown Landlord"}</h4>
+                    <h4 className="text-xs font-bold text-gray-900">{selectedProperty.landlordId?.name || "Unknown User"}</h4>
                     <p className="text-[10px] text-gray-400 font-medium">{selectedProperty.landlordId?.email || ""}</p>
                   </div>
                 </div>
@@ -274,12 +336,12 @@ export default function ManagePropertiesPage() {
           <DialogContent className="max-w-md rounded-3xl p-6 font-sans">
             <DialogHeader>
               <DialogTitle className="text-base font-black text-gray-950 uppercase tracking-tight flex items-center gap-2">
-                <Trash2 className="w-5 h-5 text-red-600" /> Revoke Property Post
+                <ShieldAlert className="w-5 h-5 text-red-600" /> Revoke Property Post
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 pt-3">
               <p className="text-xs text-gray-500 leading-relaxed font-semibold">
-                Are you sure you want to permanently delete this listing from the database? This action is irreversible and the listing will immediately disappear from student browse pages.
+                Are you sure you want to permanently delete/reject this listing from the database? This action is irreversible and the listing will immediately disappear from browse queues.
               </p>
               <div className="flex items-center justify-end gap-3">
                 <Button

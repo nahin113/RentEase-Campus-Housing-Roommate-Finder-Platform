@@ -11,6 +11,7 @@ import {
   Search,
   User,
   FileText,
+  Inbox,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useEffect, useState } from "react";
@@ -58,6 +59,8 @@ export default function DashboardNavLinks({ role }: { role?: string }) {
     { icon: Search, href: "/flats", label: "Browse Housing" },
     { icon: Users, href: "/roommates", label: "Find Roommates" },
     { icon: Users, href: "/groups", label: "Find Groups" },
+    { icon: PlusCircle, href: "/renter/add-sublet", label: "Post Sublet" },
+    { icon: Inbox, href: "/renter/sublet-requests", label: "Sublet Requests" },
     { icon: FileText, href: "/renter/my-applications", label: "My Applications" },
     { icon: User, href: "/renter/profile", label: "My Profile" },
   ];

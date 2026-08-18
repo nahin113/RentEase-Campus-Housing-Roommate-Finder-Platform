@@ -457,7 +457,7 @@ export default function AddProperty() {
   const [neighborhoodQuery, setNeighborhoodQuery] = useState("Rupnagar Abashik");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionIdx, setActiveSuggestionIdx] = useState(0);
-  const [type, setType] = useState("Private Room");
+  const type = "Entire Flat";
   const [targetAudience, setTargetAudience] = useState("both");
   const [desc, setDesc] = useState("");
   const [fullDescription, setFullDescription] = useState("");
@@ -515,10 +515,7 @@ export default function AddProperty() {
   const [condition, setCondition] = useState("well_maintained");
   const [gateClosingTime, setGateClosingTime] = useState("11:00 PM");
 
-  // Room specs (when Private Room or Shared Co-Living)
-  const [roomSizeSqFt, setRoomSizeSqFt] = useState("");
-  const [bathroomType, setBathroomType] = useState("attached");
-  const [bedType, setBedType] = useState("single");
+
 
   // Multiple Images upload via external ImgBB API
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -623,11 +620,7 @@ export default function AddProperty() {
         },
         condition,
         gateClosingTime,
-        roomSpecs: (type === "Private Room" || type === "Shared Co-Living") ? {
-          roomSizeSqFt: Number(roomSizeSqFt) || undefined,
-          bathroomType,
-          bedType
-        } : undefined
+        roomSpecs: undefined
       };
 
       // Perform POST call using your application's serverMutation helper
@@ -635,7 +628,7 @@ export default function AddProperty() {
       const result = await serverMutation(`/api/v1/landlord/properties/${user?.id}`, payload, "POST");
 
       if (result?.success || result) {
-        toast.success("Flat listed successfully!");
+        toast.success("Your listing has been submitted and is awaiting Admin Approval.");
         router.push("/landlord/properties");
         router.refresh();
       } else {
@@ -710,30 +703,7 @@ export default function AddProperty() {
               />
             </div>
 
-            <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Listing Type</label>
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { value: "Entire Flat", label: "Entire Flat", desc: "Rent the entire home" },
-                  { value: "Private Room", label: "Private Room", desc: "Private room with shared areas" },
-                  { value: "Shared Co-Living", label: "Shared Co-Living", desc: "Shared room and facilities" }
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setType(opt.value)}
-                    className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                      type === opt.value
-                        ? "border-[#f15a14] bg-orange-50/20 text-gray-950"
-                        : "border-gray-100 hover:border-gray-200 text-gray-500 bg-white"
-                    }`}
-                  >
-                    <span className="font-extrabold text-xs block mb-0.5">{opt.label}</span>
-                    <span className="text-[9px] font-medium text-gray-400 block">{opt.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             <div className="space-y-1.5 md:col-span-2">
               <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Preferred Renter (Tenant Preference)</label>
@@ -812,7 +782,6 @@ export default function AddProperty() {
         <div className="space-y-5 pt-4 border-t border-gray-50">
           <h3 className="text-sm font-bold text-gray-950">Property Layout & Specifications</h3>
 
-          {type === "Entire Flat" ? (
             <div className="space-y-4">
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Entire Flat Composition</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -861,46 +830,6 @@ export default function AddProperty() {
                 <span className="text-xs font-bold text-gray-700">Dedicated Dining Space Available</span>
               </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Room Size (Sq Ft)</label>
-                <input 
-                  type="number" 
-                  placeholder="e.g. 150"
-                  value={roomSizeSqFt}
-                  onChange={e => setRoomSizeSqFt(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Bathroom Type</label>
-                <select 
-                  value={bathroomType}
-                  onChange={e => setBathroomType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
-                >
-                  <option value="attached">Attached Bathroom</option>
-                  <option value="shared">Shared Bathroom</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-gray-400 uppercase">Bed & Furnishing Status</label>
-                <select 
-                  value={bedType}
-                  onChange={e => setBedType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-150 focus:border-[#f15a14] text-xs focus:outline-none transition-all duration-200"
-                >
-                  <option value="single">Single Bed Included</option>
-                  <option value="double">Double Bed Included</option>
-                  <option value="bunk">Bunk Bed Included</option>
-                  <option value="unfurnished">Unfurnished</option>
-                </select>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Section 3: Property Details & Rules */}
